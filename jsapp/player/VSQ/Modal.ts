@@ -121,6 +121,12 @@ export class Modal {
     this.root.addClass("is-error");
     this.showingModal = true;
   }
+  public static hideError(): void {
+    Modal.instance.hideError();
+  }
+  private hideError(): void {
+    this.root.removeClass("is-error");
+  }
 
   private static showLogin(messageHTML: string): void {
     Modal.instance.showLogin(messageHTML);

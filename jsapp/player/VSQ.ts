@@ -751,8 +751,8 @@ export class VSQ {
       switch(error['code']) {
         case 8:
           // subtitle error
-          e.preventDefault();
           this.log("Failed to load subtitle, url was:", error['url']);
+          Modal.hideError();
           break;
         default:
           this.log("unknown flowplayer error:", error);

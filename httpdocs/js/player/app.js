@@ -1006,6 +1006,12 @@ System.register("player/VSQ/Modal", ["player/VSQ", "player/VSQAPI", "Tools", "Es
                     this.root.addClass("is-error");
                     this.showingModal = true;
                 };
+                Modal.hideError = function () {
+                    Modal.instance.hideError();
+                };
+                Modal.prototype.hideError = function () {
+                    this.root.removeClass("is-error");
+                };
                 Modal.showLogin = function (messageHTML) {
                     Modal.instance.showLogin(messageHTML);
                 };
@@ -2739,8 +2745,8 @@ System.register("player/VSQ", ["player/VSQ/LayoutChooser", "player/VSQ/QualityCh
                         _this.unload();
                         switch (error['code']) {
                             case 8:
-                                e.preventDefault();
                                 _this.log("Failed to load subtitle, url was:", error['url']);
+                                Modal_5.Modal.hideError();
                                 break;
                             default:
                                 _this.log("unknown flowplayer error:", error);
