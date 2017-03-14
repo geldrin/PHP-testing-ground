@@ -2038,7 +2038,6 @@ System.register("player/VSQHLS", ["player/VSQ", "RateLimiter"], function (export
                     var _this = this;
                     this.limiter = new RateLimiter_2.default();
                     this.limiter.add("onNetworkError", function () {
-                        console.log("onNetworkError");
                         _this.flushBuffer();
                         _this.hls.startLoad();
                     }, 10 * RateLimiter_2.default.SECOND, false);
