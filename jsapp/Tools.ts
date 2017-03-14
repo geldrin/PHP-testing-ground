@@ -37,7 +37,11 @@ export default class Tools {
 
   public static setToStorage(key: string, value: any): void {
     let raw = JSON.stringify(value);
-    localStorage.setItem(key, raw);
+    try {
+      localStorage.setItem(key, raw);
+    } catch(err) {
+      // Failed to read the 'localStorage' property from 'Window': Access is denied for this document.
+    }
   }
 
   public static getFromStorage(key: string, def?: any): any {

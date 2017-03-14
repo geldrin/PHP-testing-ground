@@ -172,6 +172,26 @@ abstract class Player {
   abstract protected function getFlashConfig( $cfg );
   abstract protected function getFlowStreams( $cfg );
 
+  protected function parseDuration( $duration, $default = 0 ) {
+    if ( ctype_digit( $duration ) )
+      return intval( $duration );
+
+    $match = preg_match(
+      '/^(\d{1,2})h(\d{1,2})m(\d{1,2})s$/',
+      $duration,
+      $matches
+    );
+    if ( !$match )
+      return $default;
+
+    $ret = 0;
+    $ret += $matches[1] * 60 * 60;
+    $ret += $matches[2] * 60;
+    $ret += $matches[3];
+
+    return $ret;
+  }
+
   protected function getFlowConfig( $cfg ) {
     if ( !$cfg['hds'] )
       throw new \Exception("Flowplayer only supported with HDS streams");
@@ -230,6 +250,10 @@ abstract class Player {
       $apiurl = $this->bootstrap->baseuri;
 
     $ret['vsq']['apiurl'] = $apiurl . 'playerapi';
+    if ( isset( $cfg['startposition'] ) )
+      $ret['vsq']['position']['lastposition'] =
+        $this->parseDuration( $cfg['startposition'] )
+      ;
 
     $newclip = array(
       // Set a title for this clip. Displayed in a top bar when hovering over the player.

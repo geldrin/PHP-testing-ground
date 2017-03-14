@@ -86,6 +86,7 @@ export default class VSQHLS {
         abrBandWidthUpFactor: 0.7,
         minAutoBitrate: 0
       */
+      startPosition: this.cfg.position.lastposition || -1,
       fragLoadingMaxRetry: 0,
       manifestLoadingMaxRetry: 0,
       levelLoadingMaxRetry: 0,

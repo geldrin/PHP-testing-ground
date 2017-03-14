@@ -197,7 +197,11 @@ System.register("Tools", [], function (exports_4, context_4) {
                 };
                 Tools.setToStorage = function (key, value) {
                     var raw = JSON.stringify(value);
-                    localStorage.setItem(key, raw);
+                    try {
+                        localStorage.setItem(key, raw);
+                    }
+                    catch (err) {
+                    }
                 };
                 Tools.getFromStorage = function (key, def) {
                     var raw;
@@ -1660,7 +1664,7 @@ System.register("player/VSQ/PresenceCheck", ["player/VSQ/BasePlugin", "player/VS
                                 case 0:
                                     this.resetInactivity();
                                     this.checking = true;
-                                    this.lastPosition = this.flow.video.duration;
+                                    this.lastPosition = this.flow.video.time;
                                     return [4 /*yield*/, Modal_4.Modal.presenceCheck(this.cfg.presenceCheck.timeoutSeconds)];
                                 case 1:
                                     action = _a.sent();
@@ -1984,6 +1988,7 @@ System.register("player/VSQHLS", ["player/VSQ", "RateLimiter"], function (export
                 VSQHLS.prototype.initHls = function (type) {
                     var _this = this;
                     this.hls = new Hls({
+                        startPosition: this.cfg.position.lastposition || -1,
                         fragLoadingMaxRetry: 0,
                         manifestLoadingMaxRetry: 0,
                         levelLoadingMaxRetry: 0,

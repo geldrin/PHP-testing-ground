@@ -62,7 +62,7 @@ export default class PresenceCheck extends BasePlugin {
     this.resetInactivity();
 
     this.checking = true;
-    this.lastPosition = this.flow.video.duration;
+    this.lastPosition = this.flow.video.time;
 
     // nem kell pause, menjen csak tovább a videó szépen,
     // ha nyugtázási timeout letelik, akkor bontsuk.
