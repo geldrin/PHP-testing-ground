@@ -86,9 +86,9 @@ export default class VSQHLS {
         abrBandWidthUpFactor: 0.7,
         minAutoBitrate: 0
       */
-      fragLoadingMaxRetry: 0,
-      manifestLoadingMaxRetry: 0,
-      levelLoadingMaxRetry: 0,
+      fragLoadingMaxRetry: -1,
+      manifestLoadingMaxRetry: -1,
+      levelLoadingMaxRetry: -1,
       initialLiveManifestSize: 2 // min 2 fragment mert sokat akad kulonben
     };
 
@@ -130,15 +130,15 @@ export default class VSQHLS {
     this.limiter = new RateLimiter();
     this.limiter.add("onNetworkError", () => {
       this.hls.startLoad();
-    }, 10*RateLimiter.SECOND, true);
+    }, 10*RateLimiter.SECOND, false);
 
     this.limiter.add("onSwapAudioCodec", () => {
       this.hls.swapAudioCodec();
-    }, 10*RateLimiter.SECOND, true);
+    }, 10*RateLimiter.SECOND, false);
 
     this.limiter.add("onRecoverMedia", () => {
       this.hls.recoverMediaError();
-    }, 10*RateLimiter.SECOND, true);
+    }, 10*RateLimiter.SECOND, false);
   }
 
   private log(...params: Object[]): void {

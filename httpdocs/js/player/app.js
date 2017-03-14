@@ -1998,9 +1998,9 @@ System.register("player/VSQHLS", ["player/VSQ", "RateLimiter"], function (export
                 VSQHLS.prototype.initHls = function (type) {
                     var _this = this;
                     var cfg = {
-                        fragLoadingMaxRetry: 0,
-                        manifestLoadingMaxRetry: 0,
-                        levelLoadingMaxRetry: 0,
+                        fragLoadingMaxRetry: -1,
+                        manifestLoadingMaxRetry: -1,
+                        levelLoadingMaxRetry: -1,
                         initialLiveManifestSize: 2
                     };
                     if (this.vsq.isMainMasterVideo())
@@ -2037,13 +2037,13 @@ System.register("player/VSQHLS", ["player/VSQ", "RateLimiter"], function (export
                     this.limiter = new RateLimiter_2.default();
                     this.limiter.add("onNetworkError", function () {
                         _this.hls.startLoad();
-                    }, 10 * RateLimiter_2.default.SECOND, true);
+                    }, 10 * RateLimiter_2.default.SECOND, false);
                     this.limiter.add("onSwapAudioCodec", function () {
                         _this.hls.swapAudioCodec();
-                    }, 10 * RateLimiter_2.default.SECOND, true);
+                    }, 10 * RateLimiter_2.default.SECOND, false);
                     this.limiter.add("onRecoverMedia", function () {
                         _this.hls.recoverMediaError();
-                    }, 10 * RateLimiter_2.default.SECOND, true);
+                    }, 10 * RateLimiter_2.default.SECOND, false);
                 };
                 VSQHLS.prototype.log = function () {
                     var params = [];
