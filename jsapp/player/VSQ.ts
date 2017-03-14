@@ -745,8 +745,19 @@ export class VSQ {
     root.prepend(engine);
     this.setupHLS(VSQType.MASTER);
 
-    this.flow.on(this.eventName("error"), () => {
+    this.flow.on(this.eventName("error"), (e: Event, error: Object) => {
+
       this.unload();
+      switch(error['code']) {
+        case 8:
+          // subtitle error
+          e.preventDefault();
+          this.log("Failed to load subtitle, url was:", error['url']);
+          break;
+        default:
+          this.log("unknown flowplayer error:", error);
+          break;
+      }
     });
 
     this.setupVideoEvents(video);
