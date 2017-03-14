@@ -131,6 +131,7 @@ export default class VSQHLS {
   private initLimiter(): void {
     this.limiter = new RateLimiter();
     this.limiter.add("onNetworkError", () => {
+      console.log("onNetworkError");
       this.flushBuffer();
       this.hls.startLoad();
     }, 10*RateLimiter.SECOND, false);
