@@ -575,6 +575,7 @@ class Live extends Player {
       'type' => 'application/x-mpegurl',
       'url'  => '',
       'labels' => array(),
+      'parameters' => array(),
     );
 
     //$hascontent = $this->model->row['hascontent'];
@@ -601,6 +602,7 @@ class Live extends Player {
 
       $ret['master']['url'] = $this->getFlowUrl( $cfg, 'liveabr', $ver, $extraparams );
       $ret['master']['labels'][] = $stream['qualitytag'];
+      $ret['master']['parameters'][] = $extraparams;
 
       if ( !$hascontent )
         continue;
