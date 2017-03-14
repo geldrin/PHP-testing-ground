@@ -146,8 +146,8 @@
   height: 100%;
   cursor: col-resize;
 }
-#player.vsq-presencecheck .vsq-modal,
-#player.vsq-presencecheck .vsq-modal .vsq-presence {
+#player .vsq-presencecheck .vsq-modal,
+#player .vsq-presencecheck .vsq-modal .vsq-presence {
   display: block;
 }
 #player .vsq-modal .vsq-presence,
