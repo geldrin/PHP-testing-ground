@@ -1372,7 +1372,7 @@ System.register("player/VSQ/ProgressReport", ["player/VSQAPI", "player/VSQ/BaseP
                                     this.lastReportTime = Tools_4.default.now();
                                     _a.label = 1;
                                 case 1:
-                                    _a.trys.push([1, 6, , 7]);
+                                    _a.trys.push([1, 5, , 6]);
                                     params = jQuery.extend({}, this.cfg.parameters);
                                     params['lastposition'] = this.lastPosition;
                                     this.log("reporting", params);
@@ -1384,8 +1384,6 @@ System.register("player/VSQ/ProgressReport", ["player/VSQAPI", "player/VSQ/BaseP
                                         throw new Error("Unexpected result from api call");
                                     result = data.data;
                                     if (!(result.success === false))
-                                        return [3 /*break*/, 5];
-                                    if (!(result.position === 0))
                                         return [3 /*break*/, 4];
                                     this.vsq.pause();
                                     return [4 /*yield*/, Modal_2.Modal.showTransientMessage(this.l.get("player_progress_reset"))];
@@ -1394,20 +1392,17 @@ System.register("player/VSQ/ProgressReport", ["player/VSQAPI", "player/VSQ/BaseP
                                     this.vsq.seek(0);
                                     return [2 /*return*/];
                                 case 4:
-                                    Modal_2.Modal.showError(this.l.get("player_progress_failed"));
-                                    return [2 /*return*/];
-                                case 5:
                                     if (!this.watched && result.watched) {
                                         this.watched = true;
                                         Modal_2.Modal.showToast(this.l.get("player_progress_watched"));
                                     }
-                                    return [3 /*break*/, 7];
-                                case 6:
+                                    return [3 /*break*/, 6];
+                                case 5:
                                     err_3 = _a.sent();
                                     this.log("error", err_3);
                                     Modal_2.Modal.showError(this.l.get('networkerror'));
-                                    return [3 /*break*/, 7];
-                                case 7: return [2 /*return*/];
+                                    return [3 /*break*/, 6];
+                                case 6: return [2 /*return*/];
                             }
                         });
                     });

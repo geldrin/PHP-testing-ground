@@ -48,14 +48,9 @@ export default class ProgressReport extends BasePlugin {
       let result = data.data as Result;
 
       if (result.success === false) {
-        if (result.position === 0) {
-          this.vsq.pause();
-          await Modal.showTransientMessage(this.l.get("player_progress_reset"));
-          this.vsq.seek(0);
-          return;
-        }
-
-        Modal.showError(this.l.get("player_progress_failed"));
+        this.vsq.pause();
+        await Modal.showTransientMessage(this.l.get("player_progress_reset"));
+        this.vsq.seek(0);
         return;
       }
 
