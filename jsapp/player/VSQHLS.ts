@@ -86,9 +86,11 @@ export default class VSQHLS {
         abrBandWidthUpFactor: 0.7,
         minAutoBitrate: 0
       */
-      fragLoadingMaxRetry: -1,
-      manifestLoadingMaxRetry: -1,
-      levelLoadingMaxRetry: -1,
+      debug: true,
+      fragLoadingMaxRetry: 0,
+      manifestLoadingMaxRetry: 0,
+      levelLoadingMaxRetry: 0,
+      appendErrorMaxRetry: 0,
       initialLiveManifestSize: 2 // min 2 fragment mert sokat akad kulonben
     };
 
@@ -129,6 +131,7 @@ export default class VSQHLS {
   private initLimiter(): void {
     this.limiter = new RateLimiter();
     this.limiter.add("onNetworkError", () => {
+      this.flushBuffer();
       this.hls.startLoad();
     }, 10*RateLimiter.SECOND, false);
 
