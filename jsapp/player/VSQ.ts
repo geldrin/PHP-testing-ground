@@ -746,8 +746,6 @@ export class VSQ {
     this.setupHLS(VSQType.MASTER);
 
     this.flow.on(this.eventName("error"), (e: Event, error: Object) => {
-
-      this.unload();
       switch(error['code']) {
         case 8:
           // subtitle error
@@ -756,6 +754,7 @@ export class VSQ {
           break;
         default:
           this.log("unknown flowplayer error:", error);
+          this.unload();
           break;
       }
     });

@@ -2742,7 +2742,6 @@ System.register("player/VSQ", ["player/VSQ/LayoutChooser", "player/VSQ/QualityCh
                     root.prepend(engine);
                     this.setupHLS(VSQType.MASTER);
                     this.flow.on(this.eventName("error"), function (e, error) {
-                        _this.unload();
                         switch (error['code']) {
                             case 8:
                                 _this.log("Failed to load subtitle, url was:", error['url']);
@@ -2750,6 +2749,7 @@ System.register("player/VSQ", ["player/VSQ/LayoutChooser", "player/VSQ/QualityCh
                                 break;
                             default:
                                 _this.log("unknown flowplayer error:", error);
+                                _this.unload();
                                 break;
                         }
                     });
