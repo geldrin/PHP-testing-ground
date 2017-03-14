@@ -50,8 +50,10 @@ export default class Statistics extends BasePlugin {
   }
 
   private enqueueReport(report: Report): void {
-    if (this.currentLevel == null)
-      throw new Error("Quality level not yet set, cannot ascertain parameters");
+    if (this.currentLevel == null) {
+      this.log("Quality level not yet set (cant know params), lost report", report);
+      return;
+    }
 
     let info = this.vsq.getVideoInfo(VSQType.MASTER);
     let quality = this.currentLevel;

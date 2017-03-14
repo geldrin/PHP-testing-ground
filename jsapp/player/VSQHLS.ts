@@ -33,7 +33,7 @@ export default class VSQHLS {
   }
 
   private initHls(type: VSQType): void {
-    this.hls = new Hls({
+    let cfg = {
       /*
         autoStartLoad: true,
         startPosition : -1,
@@ -86,12 +86,17 @@ export default class VSQHLS {
         abrBandWidthUpFactor: 0.7,
         minAutoBitrate: 0
       */
-      startPosition: this.cfg.position.lastposition || -1,
       fragLoadingMaxRetry: 0,
       manifestLoadingMaxRetry: 0,
       levelLoadingMaxRetry: 0,
       initialLiveManifestSize: 2 // min 2 fragment mert sokat akad kulonben
-    });
+    };
+
+    // csak a non-intro/outro videoknal kezdjuk adott poziciorol
+    if (this.vsq.isMainMasterVideo())
+      cfg['startPosition'] = this.cfg.position.lastposition || -1;
+
+    this.hls = new Hls(cfg);
     this.hls.on(Hls.Events.MEDIA_ATTACHED, (evt: string, data: any): void => {
       this.onMediaAttached(evt, data);
     });
@@ -125,15 +130,15 @@ export default class VSQHLS {
     this.limiter = new RateLimiter();
     this.limiter.add("onNetworkError", () => {
       this.hls.startLoad();
-    }, 3*RateLimiter.SECOND, true);
+    }, 10*RateLimiter.SECOND, true);
 
     this.limiter.add("onSwapAudioCodec", () => {
       this.hls.swapAudioCodec();
-    }, 3*RateLimiter.SECOND, true);
+    }, 10*RateLimiter.SECOND, true);
 
     this.limiter.add("onRecoverMedia", () => {
       this.hls.recoverMediaError();
-    }, 3*RateLimiter.SECOND, true);
+    }, 10*RateLimiter.SECOND, true);
   }
 
   private log(...params: Object[]): void {

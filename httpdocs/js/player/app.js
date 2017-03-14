@@ -1765,8 +1765,10 @@ System.register("player/VSQ/Statistics", ["player/VSQ", "player/VSQAPI", "player
                     return _this;
                 }
                 Statistics.prototype.enqueueReport = function (report) {
-                    if (this.currentLevel == null)
-                        throw new Error("Quality level not yet set, cannot ascertain parameters");
+                    if (this.currentLevel == null) {
+                        this.log("Quality level not yet set (cant know params), lost report", report);
+                        return;
+                    }
                     var info = this.vsq.getVideoInfo(VSQ_5.VSQType.MASTER);
                     var quality = this.currentLevel;
                     if (quality < 0)
@@ -1995,13 +1997,15 @@ System.register("player/VSQHLS", ["player/VSQ", "RateLimiter"], function (export
                 }
                 VSQHLS.prototype.initHls = function (type) {
                     var _this = this;
-                    this.hls = new Hls({
-                        startPosition: this.cfg.position.lastposition || -1,
+                    var cfg = {
                         fragLoadingMaxRetry: 0,
                         manifestLoadingMaxRetry: 0,
                         levelLoadingMaxRetry: 0,
                         initialLiveManifestSize: 2
-                    });
+                    };
+                    if (this.vsq.isMainMasterVideo())
+                        cfg['startPosition'] = this.cfg.position.lastposition || -1;
+                    this.hls = new Hls(cfg);
                     this.hls.on(Hls.Events.MEDIA_ATTACHED, function (evt, data) {
                         _this.onMediaAttached(evt, data);
                     });
@@ -2033,13 +2037,13 @@ System.register("player/VSQHLS", ["player/VSQ", "RateLimiter"], function (export
                     this.limiter = new RateLimiter_2.default();
                     this.limiter.add("onNetworkError", function () {
                         _this.hls.startLoad();
-                    }, 3 * RateLimiter_2.default.SECOND, true);
+                    }, 10 * RateLimiter_2.default.SECOND, true);
                     this.limiter.add("onSwapAudioCodec", function () {
                         _this.hls.swapAudioCodec();
-                    }, 3 * RateLimiter_2.default.SECOND, true);
+                    }, 10 * RateLimiter_2.default.SECOND, true);
                     this.limiter.add("onRecoverMedia", function () {
                         _this.hls.recoverMediaError();
-                    }, 3 * RateLimiter_2.default.SECOND, true);
+                    }, 10 * RateLimiter_2.default.SECOND, true);
                 };
                 VSQHLS.prototype.log = function () {
                     var params = [];
@@ -2745,7 +2749,7 @@ System.register("player/VSQ", ["player/VSQ/LayoutChooser", "player/VSQ/QualityCh
                                 Modal_5.Modal.hideError();
                                 break;
                             default:
-                                _this.log("unknown flowplayer error:", error);
+                                _this.log("unknown flowplayer error:", e, error);
                                 _this.unload();
                                 break;
                         }

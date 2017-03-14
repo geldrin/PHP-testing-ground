@@ -753,7 +753,7 @@ export class VSQ {
           Modal.hideError();
           break;
         default:
-          this.log("unknown flowplayer error:", error);
+          this.log("unknown flowplayer error:", e, error);
           this.unload();
           break;
       }
