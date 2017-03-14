@@ -122,10 +122,10 @@
 }
 #player .vsq-is-toast .vsq-modal,
 #player .vsq-is-toast .vsq-modal .vsq-toast {
-  display: block;
+  display: inline-block;
 }
 #player .vsq-modal .vsq-toast {
-  display: inline-block;
+  display: none;
   width: 150px;
   background: #fff;
   float: right;
@@ -162,6 +162,9 @@
 }
 #player .vsq-modal .vsq-presence.vsq-checkfailed .vsq-button-continue {
   display: block;
+}
+#player .vsq-transient-error .vsq-modal .vsq-transient {
+  background: #fff;
 }
 
 .flowplayer .fp-menu {

@@ -1385,10 +1385,12 @@ System.register("player/VSQ/ProgressReport", ["player/VSQAPI", "player/VSQ/BaseP
                                     result = data.data;
                                     if (!(result.success === false))
                                         return [3 /*break*/, 4];
+                                    this.log("Progress report too old, resetting");
                                     this.vsq.pause();
                                     return [4 /*yield*/, Modal_2.Modal.showTransientMessage(this.l.get("player_progress_reset"))];
                                 case 3:
                                     _a.sent();
+                                    this.vsq.resume();
                                     this.vsq.seek(0);
                                     return [2 /*return*/];
                                 case 4:
