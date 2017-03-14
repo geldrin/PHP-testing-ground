@@ -22,6 +22,7 @@ export default class ProgressReport extends BasePlugin {
   private lastReportTime: number | null;
   private lastPosition: number = 0;
   private watched = false;
+  private playing = false;
 
   constructor(vsq: VSQ) {
     super(vsq);
@@ -83,11 +84,17 @@ export default class ProgressReport extends BasePlugin {
       return;
     }
 
+    this.flow.on("resume.vsq-pgr", (e: Event, flow: Flowplayer, time: number) => {
+      this.playing = true;
+    });
+    // mivel jon egy progress event meg azelott hogy elkezdene a video jatszani
+    // igy csak akkor jelentunk ha mar elindult a video
     this.flow.on("progress.vsq-pgr", (e: Event, flow: Flowplayer, time: number) => {
       if (this.lastPosition < time)
         this.lastPosition = time;
 
-      this.reportIfNeeded();
+      if (this.playing)
+        this.reportIfNeeded();
     });
     this.flow.on("finish.vsq-pgr", (e: Event, flow: Flowplayer) => {
       this.reportIfNeeded(true);

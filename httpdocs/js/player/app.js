@@ -1351,6 +1351,7 @@ System.register("player/VSQ/ProgressReport", ["player/VSQAPI", "player/VSQ/BaseP
                     _this.pluginName = "ProgressReport";
                     _this.lastPosition = 0;
                     _this.watched = false;
+                    _this.playing = false;
                     if (!_this.cfg.position.report)
                         throw new Error("Reporting disabled yet reporting requested");
                     _this.interval = _this.cfg.position.intervalSeconds * 1000;
@@ -1418,10 +1419,14 @@ System.register("player/VSQ/ProgressReport", ["player/VSQAPI", "player/VSQ/BaseP
                         this.log("Intro our outro playing, not reporting progress");
                         return;
                     }
+                    this.flow.on("resume.vsq-pgr", function (e, flow, time) {
+                        _this.playing = true;
+                    });
                     this.flow.on("progress.vsq-pgr", function (e, flow, time) {
                         if (_this.lastPosition < time)
                             _this.lastPosition = time;
-                        _this.reportIfNeeded();
+                        if (_this.playing)
+                            _this.reportIfNeeded();
                     });
                     this.flow.on("finish.vsq-pgr", function (e, flow) {
                         _this.reportIfNeeded(true);
