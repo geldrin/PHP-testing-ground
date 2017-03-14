@@ -2039,13 +2039,10 @@ System.register("player/VSQHLS", ["player/VSQ", "RateLimiter"], function (export
                     this.limiter = new RateLimiter_2.default();
                     this.limiter.add("onNetworkError", function () {
                         _this.flushBuffer();
-                        _this.hls.startLoad();
                     }, 10 * RateLimiter_2.default.SECOND, false);
                     this.limiter.add("onSwapAudioCodec", function () {
-                        _this.hls.swapAudioCodec();
                     }, 10 * RateLimiter_2.default.SECOND, false);
                     this.limiter.add("onRecoverMedia", function () {
-                        _this.hls.recoverMediaError();
                     }, 10 * RateLimiter_2.default.SECOND, false);
                 };
                 VSQHLS.prototype.log = function () {
