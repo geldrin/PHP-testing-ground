@@ -41,7 +41,15 @@ export default class Tools {
   }
 
   public static getFromStorage(key: string, def?: any): any {
-    let raw = localStorage.getItem(key);
+    // Uncaught DOMException:
+    // Failed to read the 'localStorage' property from 'Window': Access is denied for this document.
+    let raw: string | null;
+    try {
+      raw = localStorage.getItem(key);
+    } catch(err) {
+      return def;
+    }
+
     if (raw == null)
       return def;
 

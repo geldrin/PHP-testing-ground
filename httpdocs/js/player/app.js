@@ -200,7 +200,13 @@ System.register("Tools", [], function (exports_4, context_4) {
                     localStorage.setItem(key, raw);
                 };
                 Tools.getFromStorage = function (key, def) {
-                    var raw = localStorage.getItem(key);
+                    var raw;
+                    try {
+                        raw = localStorage.getItem(key);
+                    }
+                    catch (err) {
+                        return def;
+                    }
                     if (raw == null)
                         return def;
                     var data;
