@@ -29,7 +29,7 @@ export abstract class BasePlugin {
       return;
 
     params.unshift(`[${this.pluginName}]`);
-    console.log.apply(console, params);
+    console.warn.apply(console, params);
   }
 
   // non-abstract mert nem kell hogy mindenki implementalja

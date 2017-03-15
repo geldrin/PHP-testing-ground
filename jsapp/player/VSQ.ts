@@ -18,6 +18,7 @@ import Escape from "../Escape";
 import Locale from "../Locale";
 import RateLimiter from "../RateLimiter";
 
+declare var Hls: any;
 /**
  * A flowplayer plugin implementacioert felel (dual-stream, reconnect stb)
  * Typescript rewrite of:
@@ -133,7 +134,7 @@ export class VSQ {
       return;
 
     params.unshift("[VSQ]");
-    console.log.apply(console, params);
+    console.warn.apply(console, params);
   }
 
   private log(...params: Object[]): void {
@@ -304,7 +305,15 @@ export class VSQ {
     }
   }
 
+  private handleManifestParsed(type: VSQType, manifestdata: any): void {
+    // betoltodott mind a ketto, reconnect hogy syncelve legyenek
+    if (this.flow.live && this.loadedCount == 2)
+      this.hlsCall('startLoad');
+  }
+
   private handleLoadedData(e: Event): boolean | undefined {
+    e.stopImmediatePropagation();
+
     // ha elo, akkor barmelyik streamet elfogadjuk ami beindult
     // de ha betoltodott a masodik stream, akkor ahhoz hogy syncelve fussanak
     // kell egy "reconnect"
@@ -316,14 +325,8 @@ export class VSQ {
       // master mindig van, content nem biztos
       this.loadedCount++;
       let vidCount = 1 + this.cfg.secondarySources.length;
-      if (this.loadedCount != vidCount && !this.flow.live) {
-        e.stopImmediatePropagation();
-        return false;
-      }
-
-      // betoltodott mind a ketto, reconnect hogy syncelve legyenek
-      if (this.flow.live && this.loadedCount == 2)
-        this.hlsCall('startLoad');
+      if (this.loadedCount != vidCount && !this.flow.live)
+        return;
 
       // mivel a default longerType ertek a VSQType.MASTER igy csak egy esetet kell nezni
       if (
@@ -359,10 +362,15 @@ export class VSQ {
     // ha volt intro, akkor egyertelmi az autoplay miutan betoltottuk
     // mert az intro lejatszasanak a befejezese jelentette azt hogy betoltodott
     // a master, ergo eredetileg elinditottak
-    if (this.flow.video.index === this.cfg.masterIndex && this.cfg.masterIndex > 0)
+    if (this.flow.video.index === this.cfg.masterIndex && this.cfg.masterIndex > 0) {
       this.tagCall('play');
+      return;
+    }
 
-    return false;
+    if (this.cfg.autoplay)
+      this.tagCall("play");
+
+    return;
   }
 
   private handlePlay(e: Event): boolean | undefined {
@@ -643,12 +651,7 @@ export class VSQ {
     ret.className = 'fp-engine vsq-engine';
 
     ret.setAttribute('type', this.getType(video.type));
-
-    if (this.cfg.autoplay) {
-      ret.autoplay = true;
-      ret.setAttribute('autoplay', 'autoplay');
-    } else
-      ret.autoplay = false;
+    ret.autoplay = false;
 
     ret.setAttribute('x-webkit-airplay', 'allow');
 
@@ -669,6 +672,9 @@ export class VSQ {
 
   private setupHLS(type: VSQType): void {
     this.hlsEngines[type] = new VSQHLS(this, type);
+    this.hlsEngines[type].on(Hls.Events.MANIFEST_PARSED, (evt: string, data: any): void => {
+      this.handleManifestParsed(type, data);
+    });
 
     for (let i = this.plugins.length - 1; i >= 0; i--)
       this.plugins[i].setupHLS(this.hlsEngines[type], type);
@@ -766,9 +772,6 @@ export class VSQ {
 
     for (let i = this.plugins.length - 1; i >= 0; i--)
       this.plugins[i].load();
-
-    if (this.cfg.autoplay)
-      this.tagCall("play");
   }
 
   public isMainMasterVideo(): boolean {

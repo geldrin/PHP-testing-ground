@@ -50,10 +50,12 @@ export default class Statistics extends BasePlugin {
   }
 
   private enqueueReport(report: Report): void {
-    if (this.currentLevel == null) {
-      this.log("Quality level not yet set (cant know params), lost report", report);
-      return;
-    }
+    // nem tortenhetne meg hogy nincs quality level
+    // mivel a ready-t csak akkor jelezzuk a flow playernek ha a hls.js
+    // MANIFEST_PARSED allapotba kerult es onnantol mar tudjuk a qualityt
+    // csak utana johetne elviekben PLAY event
+    if (this.currentLevel == null)
+      throw new Error("Quality level not yet set (cant know params), lost report: " + JSON.stringify(report));
 
     let info = this.vsq.getVideoInfo(VSQType.MASTER);
     let quality = this.currentLevel;
@@ -281,8 +283,19 @@ export default class Statistics extends BasePlugin {
       return;
     }
 
-    this.log("Reporting quality switch (STOP+START)", level);
+    if (level == this.prevLevel) {
+      this.log("quality switch to the same level, ignoring", level);
+      return;
+    }
 
+    let from = parseInt("" + this.fromPosition, 10);
+    let to = parseInt("" + this.flow.video.time, 10);
+    if (from === to) {
+      this.log("quality switch in the same second, ignoring");
+      return;
+    }
+
+    this.log("Reporting quality switch (STOP+START)", level);
     // a regi quality szintet allitjuk be, mert arrol valtunk le
     this.currentLevel = this.prevLevel;
     this.action = "STOP";

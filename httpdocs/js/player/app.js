@@ -359,7 +359,7 @@ System.register("player/VSQ/BasePlugin", ["player/VSQ"], function (exports_6, co
                     if (!VSQ_1.VSQ.debug)
                         return;
                     params.unshift("[" + this.pluginName + "]");
-                    console.log.apply(console, params);
+                    console.warn.apply(console, params);
                 };
                 BasePlugin.prototype.configKey = function (key) {
                     throw new Error("Override configKey");
@@ -1765,10 +1765,8 @@ System.register("player/VSQ/Statistics", ["player/VSQ", "player/VSQAPI", "player
                     return _this;
                 }
                 Statistics.prototype.enqueueReport = function (report) {
-                    if (this.currentLevel == null) {
-                        this.log("Quality level not yet set (cant know params), lost report", report);
-                        return;
-                    }
+                    if (this.currentLevel == null)
+                        throw new Error("Quality level not yet set (cant know params), lost report: " + JSON.stringify(report));
                     var info = this.vsq.getVideoInfo(VSQ_5.VSQType.MASTER);
                     var quality = this.currentLevel;
                     if (quality < 0)
@@ -1953,6 +1951,16 @@ System.register("player/VSQ/Statistics", ["player/VSQ", "player/VSQAPI", "player
                         this.currentLevel = level;
                         return;
                     }
+                    if (level == this.prevLevel) {
+                        this.log("quality switch to the same level, ignoring", level);
+                        return;
+                    }
+                    var from = parseInt("" + this.fromPosition, 10);
+                    var to = parseInt("" + this.flow.video.time, 10);
+                    if (from === to) {
+                        this.log("quality switch in the same second, ignoring");
+                        return;
+                    }
                     this.log("Reporting quality switch (STOP+START)", level);
                     this.currentLevel = this.prevLevel;
                     this.action = "STOP";
@@ -1998,7 +2006,7 @@ System.register("player/VSQHLS", ["player/VSQ", "RateLimiter"], function (export
                 VSQHLS.prototype.initHls = function (type) {
                     var _this = this;
                     var cfg = {
-                        debug: true,
+                        debug: VSQ_6.VSQ.debug,
                         fragLoadingMaxRetry: 0,
                         manifestLoadingMaxRetry: 0,
                         levelLoadingMaxRetry: 0,
@@ -2039,11 +2047,15 @@ System.register("player/VSQHLS", ["player/VSQ", "RateLimiter"], function (export
                     this.limiter = new RateLimiter_2.default();
                     this.limiter.add("onNetworkError", function () {
                         _this.flushBuffer();
-                    }, 10 * RateLimiter_2.default.SECOND, false);
+                        console.error("startLoad from limiter");
+                        _this.hls.startLoad();
+                    }, 3 * RateLimiter_2.default.SECOND, false);
                     this.limiter.add("onSwapAudioCodec", function () {
-                    }, 10 * RateLimiter_2.default.SECOND, false);
+                        _this.hls.swapAudioCodec();
+                    }, 3 * RateLimiter_2.default.SECOND, false);
                     this.limiter.add("onRecoverMedia", function () {
-                    }, 10 * RateLimiter_2.default.SECOND, false);
+                        _this.hls.recoverMediaError();
+                    }, 3 * RateLimiter_2.default.SECOND, false);
                 };
                 VSQHLS.prototype.log = function () {
                     var params = [];
@@ -2178,7 +2190,6 @@ System.register("player/VSQHLS", ["player/VSQ", "RateLimiter"], function (export
                     this.flow.trigger("error", [this.flow, { code: VSQ_6.VSQ.accessDeniedError }]);
                 };
                 VSQHLS.prototype.onLevelLoadError = function (evt, data) {
-                    this.flushBuffer();
                     var level = data.context.level;
                     if (level != 0 && level <= this.video['vsq-labels'].length - 1)
                         this.hls.currentLevel = level - 1;
@@ -2318,7 +2329,7 @@ System.register("player/VSQ", ["player/VSQ/LayoutChooser", "player/VSQ/QualityCh
                     if (!VSQ.debug)
                         return;
                     params.unshift("[VSQ]");
-                    console.log.apply(console, params);
+                    console.warn.apply(console, params);
                 };
                 VSQ.prototype.log = function () {
                     var params = [];
@@ -2429,16 +2440,17 @@ System.register("player/VSQ", ["player/VSQ/LayoutChooser", "player/VSQ/QualityCh
                         content.currentTime = master.currentTime;
                     }
                 };
+                VSQ.prototype.handleManifestParsed = function (type, manifestdata) {
+                    if (this.flow.live && this.loadedCount == 2)
+                        this.hlsCall('startLoad');
+                };
                 VSQ.prototype.handleLoadedData = function (e) {
+                    e.stopImmediatePropagation();
                     if (this.flow.video.index === this.cfg.masterIndex) {
                         this.loadedCount++;
                         var vidCount = 1 + this.cfg.secondarySources.length;
-                        if (this.loadedCount != vidCount && !this.flow.live) {
-                            e.stopImmediatePropagation();
-                            return false;
-                        }
-                        if (this.flow.live && this.loadedCount == 2)
-                            this.hlsCall('startLoad');
+                        if (this.loadedCount != vidCount && !this.flow.live)
+                            return;
                         if (vidCount > 1 &&
                             this.videoTags[VSQType.CONTENT].duration > this.videoTags[VSQType.MASTER].duration)
                             this.longerType = VSQType.CONTENT;
@@ -2462,9 +2474,13 @@ System.register("player/VSQ", ["player/VSQ/LayoutChooser", "player/VSQ/QualityCh
                         url: this.videoInfo[VSQType.MASTER].src
                     });
                     this.triggerFlow("ready", data);
-                    if (this.flow.video.index === this.cfg.masterIndex && this.cfg.masterIndex > 0)
+                    if (this.flow.video.index === this.cfg.masterIndex && this.cfg.masterIndex > 0) {
                         this.tagCall('play');
-                    return false;
+                        return;
+                    }
+                    if (this.cfg.autoplay)
+                        this.tagCall("play");
+                    return;
                 };
                 VSQ.prototype.handlePlay = function (e) {
                     var tag = e.currentTarget;
@@ -2679,12 +2695,7 @@ System.register("player/VSQ", ["player/VSQ/LayoutChooser", "player/VSQ/QualityCh
                     ret.src = video.src;
                     ret.className = 'fp-engine vsq-engine';
                     ret.setAttribute('type', this.getType(video.type));
-                    if (this.cfg.autoplay) {
-                        ret.autoplay = true;
-                        ret.setAttribute('autoplay', 'autoplay');
-                    }
-                    else
-                        ret.autoplay = false;
+                    ret.autoplay = false;
                     ret.setAttribute('x-webkit-airplay', 'allow');
                     return ret;
                 };
@@ -2698,7 +2709,11 @@ System.register("player/VSQ", ["player/VSQ/LayoutChooser", "player/VSQ/QualityCh
                     delete (this.videoTags[index]);
                 };
                 VSQ.prototype.setupHLS = function (type) {
+                    var _this = this;
                     this.hlsEngines[type] = new VSQHLS_1.default(this, type);
+                    this.hlsEngines[type].on(Hls.Events.MANIFEST_PARSED, function (evt, data) {
+                        _this.handleManifestParsed(type, data);
+                    });
                     for (var i = this.plugins.length - 1; i >= 0; i--)
                         this.plugins[i].setupHLS(this.hlsEngines[type], type);
                 };
@@ -2758,8 +2773,6 @@ System.register("player/VSQ", ["player/VSQ/LayoutChooser", "player/VSQ/QualityCh
                     this.flow.video.subtitles = video.subtitles || [];
                     for (var i = this.plugins.length - 1; i >= 0; i--)
                         this.plugins[i].load();
-                    if (this.cfg.autoplay)
-                        this.tagCall("play");
                 };
                 VSQ.prototype.isMainMasterVideo = function () {
                     return this.introOrOutro === false;

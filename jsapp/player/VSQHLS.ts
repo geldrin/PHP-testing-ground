@@ -86,7 +86,7 @@ export default class VSQHLS {
         abrBandWidthUpFactor: 0.7,
         minAutoBitrate: 0
       */
-      debug: true,
+      debug: VSQ.debug,
       fragLoadingMaxRetry: 0,
       manifestLoadingMaxRetry: 0,
       levelLoadingMaxRetry: 0,
@@ -132,16 +132,17 @@ export default class VSQHLS {
     this.limiter = new RateLimiter();
     this.limiter.add("onNetworkError", () => {
       this.flushBuffer();
-      //this.hls.startLoad();
-    }, 10*RateLimiter.SECOND, false);
+      console.error("startLoad from limiter")
+      this.hls.startLoad();
+    }, 3*RateLimiter.SECOND, false);
 
     this.limiter.add("onSwapAudioCodec", () => {
-      //this.hls.swapAudioCodec();
-    }, 10*RateLimiter.SECOND, false);
+      this.hls.swapAudioCodec();
+    }, 3*RateLimiter.SECOND, false);
 
     this.limiter.add("onRecoverMedia", () => {
-      //this.hls.recoverMediaError();
-    }, 10*RateLimiter.SECOND, false);
+      this.hls.recoverMediaError();
+    }, 3*RateLimiter.SECOND, false);
   }
 
   private log(...params: Object[]): void {
@@ -163,6 +164,9 @@ export default class VSQHLS {
     this.hls.destroy();
   }
   public flushBuffer(): void {
+    // ez reseteli a hls.js state machinet!
+    // ha meg van hivva minden hibanal instant
+    // akkor vegtelen ciklusban kuldi az ajax requesteket => DoS!
     this.hls.trigger(Hls.Events.BUFFER_FLUSHING, {
         startOffset: 0,
         endOffset: Number.POSITIVE_INFINITY
@@ -268,7 +272,6 @@ export default class VSQHLS {
   }
 
   private onLevelLoadError(evt: string, data: any): void {
-    this.flushBuffer();
     let level = data.context.level;
 
     // vissza lepunk egy minosegi szintet es imadkozunk hogy az mukodni fog
