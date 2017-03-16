@@ -2199,6 +2199,20 @@ System.register("player/VSQHLS", ["player/VSQ", "RateLimiter"], function (export
                 VSQHLS.prototype.onMediaError = function (evt, data) {
                     if (!data.fatal)
                         return;
+                    switch (data.details) {
+                        case Hls.ErrorDetails.FRAG_LOOP_LOADING_ERROR:
+                            if (this.hls.autoLevelEnabled) {
+                                var failedLevel = data.frag.level;
+                                var diff = void 0;
+                                if (failedLevel !== 0)
+                                    diff = -1;
+                                else
+                                    diff = 1;
+                                this.hls.startLevel = failedLevel + diff;
+                                return;
+                            }
+                            break;
+                    }
                     this.flushBuffer();
                     this.limiter.trigger("onSwapAudioCodec");
                     this.limiter.trigger("onRecoverMedia");

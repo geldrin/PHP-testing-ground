@@ -285,6 +285,23 @@ export default class VSQHLS {
     if (!data.fatal)
       return;
 
+    switch(data.details) {
+      case Hls.ErrorDetails.FRAG_LOOP_LOADING_ERROR:
+        if (this.hls.autoLevelEnabled) {
+          // kikapcsoljuk az automata quality allitast mert nincs masik stream
+          let failedLevel = data.frag.level;
+          let diff: number;
+          if (failedLevel !== 0)
+            diff = -1;
+          else
+            diff = 1;
+
+          this.hls.startLevel = failedLevel + diff;
+          return;
+        }
+        break;
+    }
+
     this.flushBuffer();
     this.limiter.trigger("onSwapAudioCodec");
     this.limiter.trigger("onRecoverMedia");
