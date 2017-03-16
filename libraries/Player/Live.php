@@ -618,7 +618,7 @@ class Live extends Player {
 
   protected function getFlowConfig( $cfg ) {
     $ret = parent::getFlowConfig( $cfg );
-    $ret['vsq']['parameters']['feedid'] = $this->row['id'];
+    $ret['vsq']['parameters']['livefeedid'] = $this->row['id'];
     return $ret;
   }
 }
