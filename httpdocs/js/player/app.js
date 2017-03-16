@@ -2047,7 +2047,6 @@ System.register("player/VSQHLS", ["player/VSQ", "RateLimiter"], function (export
                     this.limiter = new RateLimiter_2.default();
                     this.limiter.add("onNetworkError", function () {
                         _this.flushBuffer();
-                        console.error("startLoad from limiter");
                         _this.hls.startLoad();
                     }, 3 * RateLimiter_2.default.SECOND, false);
                     this.limiter.add("onSwapAudioCodec", function () {
@@ -2197,8 +2196,6 @@ System.register("player/VSQHLS", ["player/VSQ", "RateLimiter"], function (export
                         this.limiter.trigger("onNetworkError");
                 };
                 VSQHLS.prototype.onMediaError = function (evt, data) {
-                    if (!data.fatal)
-                        return;
                     switch (data.details) {
                         case Hls.ErrorDetails.FRAG_LOOP_LOADING_ERROR:
                             if (this.hls.autoLevelEnabled) {
@@ -2208,11 +2205,15 @@ System.register("player/VSQHLS", ["player/VSQ", "RateLimiter"], function (export
                                     diff = -1;
                                 else
                                     diff = 1;
-                                this.hls.startLevel = failedLevel + diff;
+                                var newLevel = failedLevel + diff;
+                                this.hls.startLevel = newLevel;
+                                this.hls.currentLevel = newLevel;
                                 return;
                             }
                             break;
                     }
+                    if (!data.fatal)
+                        return;
                     this.flushBuffer();
                     this.limiter.trigger("onSwapAudioCodec");
                     this.limiter.trigger("onRecoverMedia");

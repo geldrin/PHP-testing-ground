@@ -132,7 +132,6 @@ export default class VSQHLS {
     this.limiter = new RateLimiter();
     this.limiter.add("onNetworkError", () => {
       this.flushBuffer();
-      console.error("startLoad from limiter")
       this.hls.startLoad();
     }, 3*RateLimiter.SECOND, false);
 
@@ -282,13 +281,12 @@ export default class VSQHLS {
   }
 
   private onMediaError(evt: string, data: any): void {
-    if (!data.fatal)
-      return;
-
     switch(data.details) {
       case Hls.ErrorDetails.FRAG_LOOP_LOADING_ERROR:
         if (this.hls.autoLevelEnabled) {
           // kikapcsoljuk az automata quality allitast mert nincs masik stream
+          // ha ezt nem tesszuk akkor oszcillalni fogunk ket stream kozott
+          // folyamatosan
           let failedLevel = data.frag.level;
           let diff: number;
           if (failedLevel !== 0)
@@ -296,11 +294,16 @@ export default class VSQHLS {
           else
             diff = 1;
 
-          this.hls.startLevel = failedLevel + diff;
+          let newLevel = failedLevel + diff;
+          this.hls.startLevel = newLevel;
+          this.hls.currentLevel = newLevel;
           return;
         }
         break;
     }
+
+    if (!data.fatal)
+      return;
 
     this.flushBuffer();
     this.limiter.trigger("onSwapAudioCodec");
