@@ -10,8 +10,8 @@ import Escape from "../../Escape";
 
 class Report {
   public action: string;
-  public fromposition: number | null = null;
-  public toposition: number | null = null;
+  public positionfrom: number | null = null;
+  public positionuntil: number | null = null;
 
   constructor(action: string) {
     this.action = action;
@@ -116,7 +116,8 @@ export default class Statistics extends BasePlugin {
     switch(this.action) {
       case "PLAY":
         this.lastPlayingReport = now;
-        report.fromposition = this.fromPosition;
+        report.positionfrom = this.fromPosition;
+        report.positionuntil = this.toPosition;
         break;
 
       case "PLAYING":
@@ -130,11 +131,11 @@ export default class Statistics extends BasePlugin {
           return;
 
         this.lastPlayingReport = now;
-        report.fromposition = this.fromPosition;
-        report.toposition = this.toPosition;
+        report.positionfrom = this.fromPosition;
+        report.positionuntil = this.toPosition;
         break;
       case "STOP":
-        report.toposition = this.toPosition;
+        report.positionuntil = this.toPosition;
         break;
     }
 
@@ -195,7 +196,7 @@ export default class Statistics extends BasePlugin {
 
     this.action = "PLAY";
     this.fromPosition = this.flow.video.time;
-    this.toPosition = null;
+    this.toPosition = this.fromPosition;
     this.reportIfNeeded();
   }
 
@@ -219,6 +220,9 @@ export default class Statistics extends BasePlugin {
   }
 
   private onProgress(time: number): void {
+    // hogy meddig haladtunk azt mindig elrakjuk
+    this.toPosition = time;
+
     // mivel a hls.js auto-level funkcioja nem dob eventeket,
     // igy vagyunk kenytelenek detektalni, az egesz elejen
     let currentLevel = this.vsq.getHLSEngines()[VSQType.MASTER].currentLevel;
@@ -243,7 +247,6 @@ export default class Statistics extends BasePlugin {
     }
 
     this.action = "PLAYING";
-    this.toPosition = time;
     this.reportIfNeeded();
   }
 
@@ -306,7 +309,7 @@ export default class Statistics extends BasePlugin {
     this.currentLevel = level;
     this.action = "PLAY";
     this.fromPosition = this.flow.video.time;
-    this.toPosition = null;
+    this.toPosition = this.fromPosition;
     this.reportIfNeeded();
   }
 }

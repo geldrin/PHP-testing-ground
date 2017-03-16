@@ -1742,8 +1742,8 @@ System.register("player/VSQ/Statistics", ["player/VSQ", "player/VSQAPI", "player
         execute: function () {
             Report = (function () {
                 function Report(action) {
-                    this.fromposition = null;
-                    this.toposition = null;
+                    this.positionfrom = null;
+                    this.positionuntil = null;
                     this.action = action;
                 }
                 return Report;
@@ -1826,7 +1826,8 @@ System.register("player/VSQ/Statistics", ["player/VSQ", "player/VSQAPI", "player
                     switch (this.action) {
                         case "PLAY":
                             this.lastPlayingReport = now;
-                            report.fromposition = this.fromPosition;
+                            report.positionfrom = this.fromPosition;
+                            report.positionuntil = this.toPosition;
                             break;
                         case "PLAYING":
                             if (this.lastPlayingReport === null)
@@ -1834,11 +1835,11 @@ System.register("player/VSQ/Statistics", ["player/VSQ", "player/VSQAPI", "player
                             if (now - this.lastPlayingReport < this.reportSeconds * 1000)
                                 return;
                             this.lastPlayingReport = now;
-                            report.fromposition = this.fromPosition;
-                            report.toposition = this.toPosition;
+                            report.positionfrom = this.fromPosition;
+                            report.positionuntil = this.toPosition;
                             break;
                         case "STOP":
-                            report.toposition = this.toPosition;
+                            report.positionuntil = this.toPosition;
                             break;
                     }
                     this.enqueueReport(report);
@@ -1886,7 +1887,7 @@ System.register("player/VSQ/Statistics", ["player/VSQ", "player/VSQAPI", "player
                     }
                     this.action = "PLAY";
                     this.fromPosition = this.flow.video.time;
-                    this.toPosition = null;
+                    this.toPosition = this.fromPosition;
                     this.reportIfNeeded();
                 };
                 Statistics.prototype.onPause = function () {
@@ -1905,6 +1906,7 @@ System.register("player/VSQ/Statistics", ["player/VSQ", "player/VSQAPI", "player
                     this.reportIfNeeded();
                 };
                 Statistics.prototype.onProgress = function (time) {
+                    this.toPosition = time;
                     var currentLevel = this.vsq.getHLSEngines()[VSQ_5.VSQType.MASTER].currentLevel;
                     if (this.prevAction !== "" && currentLevel != -1 && currentLevel != this.prevLevel)
                         this.onQualityChange(currentLevel);
@@ -1922,7 +1924,6 @@ System.register("player/VSQ/Statistics", ["player/VSQ", "player/VSQAPI", "player
                         return;
                     }
                     this.action = "PLAYING";
-                    this.toPosition = time;
                     this.reportIfNeeded();
                 };
                 Statistics.prototype.onSeek = function (time) {
@@ -1969,7 +1970,7 @@ System.register("player/VSQ/Statistics", ["player/VSQ", "player/VSQAPI", "player
                     this.currentLevel = level;
                     this.action = "PLAY";
                     this.fromPosition = this.flow.video.time;
-                    this.toPosition = null;
+                    this.toPosition = this.fromPosition;
                     this.reportIfNeeded();
                 };
                 return Statistics;
@@ -2006,7 +2007,6 @@ System.register("player/VSQHLS", ["player/VSQ", "RateLimiter"], function (export
                 VSQHLS.prototype.initHls = function (type) {
                     var _this = this;
                     var cfg = {
-                        debug: VSQ_6.VSQ.debug,
                         fragLoadingMaxRetry: 0,
                         manifestLoadingMaxRetry: 0,
                         levelLoadingMaxRetry: 0,
