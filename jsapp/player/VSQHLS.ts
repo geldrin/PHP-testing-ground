@@ -121,6 +121,7 @@ export default class VSQHLS {
       this.limiter.cancel();
 
       if (this.flow.live && this.levelLoadError) {
+        this.flushBuffer();
         this.vsq.resume();
         this.vsq.showTag(this.type);
       }

@@ -2049,6 +2049,7 @@ System.register("player/VSQHLS", ["player/VSQ", "RateLimiter"], function (export
                         _this.log("level loaded, canceling ratelimits");
                         _this.limiter.cancel();
                         if (_this.flow.live && _this.levelLoadError) {
+                            _this.flushBuffer();
                             _this.vsq.resume();
                             _this.vsq.showTag(_this.type);
                         }
