@@ -1778,8 +1778,15 @@ System.register("player/VSQ/Statistics", ["player/VSQ", "player/VSQAPI", "player
                     return _this;
                 }
                 Statistics.prototype.enqueueReport = function (report) {
-                    if (this.currentLevel == null)
-                        throw new Error("Quality level not yet set (cant know params), lost report: " + JSON.stringify(report));
+                    if (this.currentLevel == null) {
+                        var hls = this.vsq.getHLSEngines()[VSQ_5.VSQType.MASTER];
+                        if (hls.currentLevel != null)
+                            this.currentLevel = hls.currentLevel;
+                        else {
+                            this.log("No quality level available, lost report", report);
+                            return;
+                        }
+                    }
                     var info = this.vsq.getVideoInfo(VSQ_5.VSQType.MASTER);
                     var quality = this.currentLevel;
                     if (quality < 0)
@@ -2022,6 +2029,7 @@ System.register("player/VSQHLS", ["player/VSQ", "RateLimiter"], function (export
                     var _this = this;
                     var cfg = {
                         debug: VSQ_6.VSQ.debug,
+                        liveMaxLatencyDurationCount: 6,
                         fragLoadingMaxRetry: 0,
                         manifestLoadingMaxRetry: 0,
                         levelLoadingMaxRetry: 0,
@@ -2052,8 +2060,7 @@ System.register("player/VSQHLS", ["player/VSQ", "RateLimiter"], function (export
                         if (_this.flow.live && _this.levelLoadError !== 0) {
                             _this.vsq.resume();
                             _this.vsq.showTag(_this.type);
-                            var tag = _this.vsq.getVideoTags()[type];
-                            tag.currentTime += 30;
+                            _this.hls.currentLevel = _this.hls.currentLevel;
                             _this.levelLoadError = 0;
                         }
                     });
@@ -2210,9 +2217,10 @@ System.register("player/VSQHLS", ["player/VSQ", "RateLimiter"], function (export
                 };
                 VSQHLS.prototype.onLevelLoadError = function (evt, data) {
                     var level = data.context.level;
-                    if (level === 0 && this.levelLoadError > 1)
+                    var levelCount = this.video['vsq-labels'].length;
+                    if (level == 0 && this.levelLoadError > 1)
                         this.hls.stopLoad();
-                    if (level != 0 && level <= this.video['vsq-labels'].length - 1)
+                    if (level != 0 && level <= levelCount - 1)
                         this.hls.currentLevel = level - 1;
                     else
                         this.limiter.trigger("onNetworkError");

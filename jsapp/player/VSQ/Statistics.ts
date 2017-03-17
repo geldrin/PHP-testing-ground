@@ -53,9 +53,19 @@ export default class Statistics extends BasePlugin {
     // nem tortenhetne meg hogy nincs quality level
     // mivel a ready-t csak akkor jelezzuk a flow playernek ha a hls.js
     // MANIFEST_PARSED allapotba kerult es onnantol mar tudjuk a qualityt
-    // csak utana johetne elviekben PLAY event
-    if (this.currentLevel == null)
-      throw new Error("Quality level not yet set (cant know params), lost report: " + JSON.stringify(report));
+    // csak utana johetne elviekben PLAY event,
+    // sajnos ezzel szemben all az hogy barmelyik video (ha tobb van) tudni kell
+    // lejatszani, nem varhatunk kizarolag a MASTER-re, igy elkepzelheto
+    // hogy kapunk egy PLAY-t a content-tol amikor a master meg nem ready
+    if (this.currentLevel == null) {
+      let hls = this.vsq.getHLSEngines()[ VSQType.MASTER ];
+      if (hls.currentLevel != null)
+        this.currentLevel = hls.currentLevel;
+      else {
+        this.log("No quality level available, lost report", report);
+        return;
+      }
+    }
 
     let info = this.vsq.getVideoInfo(VSQType.MASTER);
     let quality = this.currentLevel;

@@ -88,6 +88,7 @@ export default class VSQHLS {
         minAutoBitrate: 0
       */
       debug: VSQ.debug,
+      liveMaxLatencyDurationCount: 6,
       fragLoadingMaxRetry: 0,
       manifestLoadingMaxRetry: 0,
       levelLoadingMaxRetry: 0,
@@ -123,8 +124,7 @@ export default class VSQHLS {
       if (this.flow.live && this.levelLoadError !== 0) {
         this.vsq.resume();
         this.vsq.showTag(this.type);
-        let tag = this.vsq.getVideoTags()[ type ];
-        tag.currentTime += 30;
+        this.hls.currentLevel = this.hls.currentLevel;
         this.levelLoadError = 0;
       }
     });
@@ -279,11 +279,12 @@ export default class VSQHLS {
 
   private onLevelLoadError(evt: string, data: any): void {
     let level = data.context.level;
+    let levelCount = this.video['vsq-labels'].length;
 
-    if (level === 0 && this.levelLoadError > 1)
+    if (level == 0 && this.levelLoadError > 1)
       this.hls.stopLoad();
 
-    if (level != 0 && level <= this.video['vsq-labels'].length - 1)
+    if (level != 0 && level <= levelCount - 1)
       this.hls.currentLevel = level - 1;
     else
       this.limiter.trigger("onNetworkError");
