@@ -2870,8 +2870,8 @@ System.register("player/VSQ", ["player/VSQ/LayoutChooser", "player/VSQ/QualityCh
                     return null;
                 };
                 VSQ.prototype.hideTag = function (type) {
-                    var typ = type == VSQType.MASTER ? 'master' : 'content';
-                    this.flowroot.addClass("vsq-hidden-" + type);
+                    var typ = type === VSQType.MASTER ? 'master' : 'content';
+                    this.flowroot.addClass("vsq-hidden-" + typ);
                     if (this.flowroot.hasClass("vsq-hidden-master vsq-hidden-content")) {
                         var msg = void 0;
                         if (this.flow.live)
@@ -2883,8 +2883,8 @@ System.register("player/VSQ", ["player/VSQ/LayoutChooser", "player/VSQ/QualityCh
                     LayoutChooser_1.default.resetSize();
                 };
                 VSQ.prototype.showTag = function (type) {
-                    var typ = type == VSQType.MASTER ? 'master' : 'content';
-                    this.flowroot.removeClass("vsq-hidden-" + type);
+                    var typ = type === VSQType.MASTER ? 'master' : 'content';
+                    this.flowroot.removeClass("vsq-hidden-" + typ);
                     Modal_5.Modal.hideTransientMessage();
                     this.flowroot.find('.vsq-layoutchooser input[name="ratio"]').change();
                 };

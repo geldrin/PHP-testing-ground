@@ -878,8 +878,8 @@ export class VSQ {
   }
 
   public hideTag(type: VSQType): void {
-    let typ = type == VSQType.MASTER? 'master': 'content';
-    this.flowroot.addClass("vsq-hidden-" + type);
+    let typ = type === VSQType.MASTER? 'master': 'content';
+    this.flowroot.addClass("vsq-hidden-" + typ);
 
     if (this.flowroot.hasClass("vsq-hidden-master vsq-hidden-content")) {
       let msg: string;
@@ -894,8 +894,8 @@ export class VSQ {
     LayoutChooser.resetSize();
   }
   public showTag(type: VSQType): void {
-    let typ = type == VSQType.MASTER? 'master': 'content';
-    this.flowroot.removeClass("vsq-hidden-" + type);
+    let typ = type === VSQType.MASTER? 'master': 'content';
+    this.flowroot.removeClass("vsq-hidden-" + typ);
     Modal.hideTransientMessage();
 
     // jelezzuk a layoutchoosernek (ha van) hogy valami valtozott
