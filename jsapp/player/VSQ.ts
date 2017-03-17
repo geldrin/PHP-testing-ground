@@ -313,6 +313,8 @@ export class VSQ {
 
   private handleLoadedData(e: Event): boolean | undefined {
     e.stopImmediatePropagation();
+    let type = this.getTypeFromEvent(e);
+    this.showTag(type);
 
     // ha elo, akkor barmelyik streamet elfogadjuk ami beindult
     // de ha betoltodott a masodik stream, akkor ahhoz hogy syncelve fussanak

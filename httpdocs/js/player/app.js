@@ -2048,7 +2048,6 @@ System.register("player/VSQHLS", ["player/VSQ", "RateLimiter"], function (export
                     this.hls.on(Hls.Events.LEVEL_LOADED, function (evt, data) {
                         _this.log("level loaded, canceling ratelimits");
                         _this.limiter.cancel();
-                        _this.vsq.showTag(_this.type);
                         if (_this.flow.live && _this.levelLoadError)
                             _this.vsq.resume();
                     });
@@ -2477,6 +2476,8 @@ System.register("player/VSQ", ["player/VSQ/LayoutChooser", "player/VSQ/QualityCh
                 };
                 VSQ.prototype.handleLoadedData = function (e) {
                     e.stopImmediatePropagation();
+                    var type = this.getTypeFromEvent(e);
+                    this.showTag(type);
                     if (this.flow.video.index === this.cfg.masterIndex) {
                         this.loadedCount++;
                         var vidCount = 1 + this.cfg.secondarySources.length;
