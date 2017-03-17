@@ -19,7 +19,7 @@ export default class VSQHLS {
   private hls: any;
   private limiter: RateLimiter;
   private type: VSQType;
-  private levelLoadError = false;
+  private levelLoadError = 0;
 
   constructor(vsq: VSQ, type: VSQType) {
     this.vsq = vsq;
@@ -120,12 +120,12 @@ export default class VSQHLS {
       this.log("level loaded, canceling ratelimits");
       this.limiter.cancel();
 
-      if (this.flow.live && this.levelLoadError) {
+      if (this.flow.live && this.levelLoadError !== 0) {
+        this.vsq.resume();
         this.vsq.showTag(this.type);
         let tag = this.vsq.getVideoTags()[ type ];
-        tag.currentTime += 1;
-        this.hls.startLoad();
-        this.levelLoadError = false;
+        tag.currentTime += 30;
+        this.levelLoadError = 0;
       }
     });
     this.hls.on(Hls.Events.ERROR, (evt: string, data: any): void => {
@@ -138,7 +138,7 @@ export default class VSQHLS {
   private initLimiter(): void {
     this.limiter = new RateLimiter();
     this.limiter.add("onNetworkError", () => {
-      this.hls.startLoad();
+      this.hls.startLoad(-1);
     }, 10*RateLimiter.SECOND, false);
 
     this.limiter.add("onSwapAudioCodec", () => {
@@ -250,7 +250,7 @@ export default class VSQHLS {
 
           case Hls.ErrorDetails.LEVEL_LOAD_ERROR:
             if (data.response && data.response.code === 404) {
-              this.levelLoadError = true;
+              this.levelLoadError++;
               this.vsq.hideTag(this.type);
               this.onLevelLoadError(evt, data);
               return;
@@ -280,11 +280,13 @@ export default class VSQHLS {
   private onLevelLoadError(evt: string, data: any): void {
     let level = data.context.level;
 
-    // hls.js automatan lep vissza a 0-as minosegi szintre,
-    // es ha automata qualityn volt a user akkor vissza
-    // ha manualisan allitjuk a szintet akkor DoS-olni fogjuk a servert
-    // masodik reconnect utan...
-    this.limiter.trigger("onNetworkError");
+    if (level === 0 && this.levelLoadError > 1)
+      this.hls.stopLoad();
+
+    if (level != 0 && level <= this.video['vsq-labels'].length - 1)
+      this.hls.currentLevel = level - 1;
+    else
+      this.limiter.trigger("onNetworkError");
   }
 
   private onMediaError(evt: string, data: any): void {

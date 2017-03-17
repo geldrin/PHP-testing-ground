@@ -2008,7 +2008,7 @@ System.register("player/VSQHLS", ["player/VSQ", "RateLimiter"], function (export
         execute: function () {
             VSQHLS = (function () {
                 function VSQHLS(vsq, type) {
-                    this.levelLoadError = false;
+                    this.levelLoadError = 0;
                     this.vsq = vsq;
                     this.flowroot = vsq.getFlowRoot();
                     this.cfg = vsq.getConfig();
@@ -2049,12 +2049,12 @@ System.register("player/VSQHLS", ["player/VSQ", "RateLimiter"], function (export
                     this.hls.on(Hls.Events.LEVEL_LOADED, function (evt, data) {
                         _this.log("level loaded, canceling ratelimits");
                         _this.limiter.cancel();
-                        if (_this.flow.live && _this.levelLoadError) {
+                        if (_this.flow.live && _this.levelLoadError !== 0) {
+                            _this.vsq.resume();
                             _this.vsq.showTag(_this.type);
                             var tag = _this.vsq.getVideoTags()[type];
-                            tag.currentTime += 1;
-                            _this.hls.startLoad();
-                            _this.levelLoadError = false;
+                            tag.currentTime += 30;
+                            _this.levelLoadError = 0;
                         }
                     });
                     this.hls.on(Hls.Events.ERROR, function (evt, data) {
@@ -2066,7 +2066,7 @@ System.register("player/VSQHLS", ["player/VSQ", "RateLimiter"], function (export
                     var _this = this;
                     this.limiter = new RateLimiter_2.default();
                     this.limiter.add("onNetworkError", function () {
-                        _this.hls.startLoad();
+                        _this.hls.startLoad(-1);
                     }, 10 * RateLimiter_2.default.SECOND, false);
                     this.limiter.add("onSwapAudioCodec", function () {
                         _this.hls.swapAudioCodec();
@@ -2189,7 +2189,7 @@ System.register("player/VSQHLS", ["player/VSQ", "RateLimiter"], function (export
                                     break;
                                 case Hls.ErrorDetails.LEVEL_LOAD_ERROR:
                                     if (data.response && data.response.code === 404) {
-                                        this.levelLoadError = true;
+                                        this.levelLoadError++;
                                         this.vsq.hideTag(this.type);
                                         this.onLevelLoadError(evt, data);
                                         return;
@@ -2210,7 +2210,12 @@ System.register("player/VSQHLS", ["player/VSQ", "RateLimiter"], function (export
                 };
                 VSQHLS.prototype.onLevelLoadError = function (evt, data) {
                     var level = data.context.level;
-                    this.limiter.trigger("onNetworkError");
+                    if (level === 0 && this.levelLoadError > 1)
+                        this.hls.stopLoad();
+                    if (level != 0 && level <= this.video['vsq-labels'].length - 1)
+                        this.hls.currentLevel = level - 1;
+                    else
+                        this.limiter.trigger("onNetworkError");
                 };
                 VSQHLS.prototype.onMediaError = function (evt, data) {
                     switch (data.details) {
