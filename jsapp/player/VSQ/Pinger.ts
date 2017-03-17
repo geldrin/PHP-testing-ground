@@ -35,14 +35,16 @@ export default class Pinger extends BasePlugin {
     }, this.cfg.pingSeconds * 1000);
   }
 
-  private handleError(message: string, errData: PingErr) {
+  private async handleError(message: string, errData: PingErr) {
     if ( errData.invalidtoken || errData.sessionexpired ) {
       Modal.showError(message);
       return;
     }
 
     if ( !errData.loggedin ) {
-      Modal.tryLogin(message);
+      this.vsq.pause();
+      await Modal.tryLogin(message);
+      this.vsq.resume();
       return;
     }
   }
@@ -50,6 +52,7 @@ export default class Pinger extends BasePlugin {
   private async ping() {
     try {
       let data = await VSQAPI.POST("users", "ping", this.cfg.parameters);
+      this.log("ping", data);
       switch(data.result) {
         case "OK":
           if (data.data !== true)

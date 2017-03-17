@@ -70,8 +70,10 @@ export default class PlayerSetup {
     let cfg = this.cfg.get("flowplayer.vsq") as VSQConfig;
     Modal.init(cfg, this.container);
 
-    if (cfg.needLogin)
+    if (cfg.needLogin) {
       await Modal.tryLogin();
+      cfg.needPing = true;
+    }
 
     this.initVSQPlugin();
 

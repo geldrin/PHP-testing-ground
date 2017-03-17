@@ -132,11 +132,11 @@ export class Modal {
     Modal.instance.showLogin(messageHTML);
   }
   private showLogin(messageHTML: string): void {
+    // TODO messageHTML biztos html-kent akarjuk insertelni? security risk
+    this.root.find(".vsq-modal .vsq-message").html(messageHTML);
     if (this.showingModal)
       return;
 
-    // TODO messageHTML biztos html-kent akarjuk insertelni? security risk
-    this.root.find(".vsq-modal .vsq-message").html(messageHTML);
     this.root.addClass("vsq-is-login");
     this.showingModal = true;
   }
