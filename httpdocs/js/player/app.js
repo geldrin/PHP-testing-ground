@@ -2021,6 +2021,7 @@ System.register("player/VSQHLS", ["player/VSQ", "RateLimiter"], function (export
                 VSQHLS.prototype.initHls = function (type) {
                     var _this = this;
                     var cfg = {
+                        debug: VSQ_6.VSQ.debug,
                         fragLoadingMaxRetry: 0,
                         manifestLoadingMaxRetry: 0,
                         levelLoadingMaxRetry: 0,

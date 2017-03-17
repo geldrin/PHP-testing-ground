@@ -87,7 +87,7 @@ export default class VSQHLS {
         abrBandWidthUpFactor: 0.7,
         minAutoBitrate: 0
       */
-      //debug: VSQ.debug,
+      debug: VSQ.debug,
       fragLoadingMaxRetry: 0,
       manifestLoadingMaxRetry: 0,
       levelLoadingMaxRetry: 0,
