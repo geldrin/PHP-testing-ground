@@ -124,7 +124,8 @@ export default class VSQHLS {
         this.vsq.resume();
         this.vsq.showTag(this.type);
         let tag = this.vsq.getVideoTags()[ type ];
-        tag.currentTime += 0.5;
+        tag.currentTime += 1;
+        this.levelLoadError = false;
       }
     });
     this.hls.on(Hls.Events.ERROR, (evt: string, data: any): void => {

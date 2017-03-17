@@ -2052,7 +2052,8 @@ System.register("player/VSQHLS", ["player/VSQ", "RateLimiter"], function (export
                             _this.vsq.resume();
                             _this.vsq.showTag(_this.type);
                             var tag = _this.vsq.getVideoTags()[type];
-                            tag.currentTime += 0.5;
+                            tag.currentTime += 1;
+                            _this.levelLoadError = false;
                         }
                     });
                     this.hls.on(Hls.Events.ERROR, function (evt, data) {
