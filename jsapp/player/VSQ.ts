@@ -401,6 +401,7 @@ export class VSQ {
   }
 
   private handlePause(e: Event): boolean | undefined {
+    e.stopImmediatePropagation();
     let type = this.getTypeFromEvent(e);
     let tag = e.currentTarget as HTMLVideoElement;
     // ha tobb video van csak akkor nem erdekel minket ha a rovidebb felvetelnek
@@ -408,16 +409,12 @@ export class VSQ {
     if (
          this.hasMultipleVideos() && type !== this.longerType &&
          tag.currentTime >= tag.duration
-       ) {
-      e.stopImmediatePropagation();
+       )
       return false;
-    }
 
     // amugy a rovidebb video pause nem erdekel minket abszolut
-    if (type !== this.longerType) {
-      e.stopImmediatePropagation();
+    if (type !== this.longerType)
       return false;
-    }
 
     this.removePoster();
     if (!this.hlsConf.bufferWhilePaused)
@@ -785,6 +782,8 @@ export class VSQ {
   }
 
   public resume(): void {
+    this.flowroot.removeClass('is-paused');
+
     if (this.introOrOutro) {
       this.videoTags[VSQType.MASTER].play();
       return;

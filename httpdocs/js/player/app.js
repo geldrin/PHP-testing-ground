@@ -2534,17 +2534,14 @@ System.register("player/VSQ", ["player/VSQ/LayoutChooser", "player/VSQ/QualityCh
                     this.triggerFlow("resume", undefined);
                 };
                 VSQ.prototype.handlePause = function (e) {
+                    e.stopImmediatePropagation();
                     var type = this.getTypeFromEvent(e);
                     var tag = e.currentTarget;
                     if (this.hasMultipleVideos() && type !== this.longerType &&
-                        tag.currentTime >= tag.duration) {
-                        e.stopImmediatePropagation();
+                        tag.currentTime >= tag.duration)
                         return false;
-                    }
-                    if (type !== this.longerType) {
-                        e.stopImmediatePropagation();
+                    if (type !== this.longerType)
                         return false;
-                    }
                     this.removePoster();
                     if (!this.hlsConf.bufferWhilePaused)
                         this.hlsCall('stopLoad');
@@ -2814,6 +2811,7 @@ System.register("player/VSQ", ["player/VSQ/LayoutChooser", "player/VSQ/QualityCh
                     this.tagCall('pause');
                 };
                 VSQ.prototype.resume = function () {
+                    this.flowroot.removeClass('is-paused');
                     if (this.introOrOutro) {
                         this.videoTags[VSQType.MASTER].play();
                         return;
