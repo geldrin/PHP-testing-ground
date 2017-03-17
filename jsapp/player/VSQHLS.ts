@@ -105,7 +105,6 @@ export default class VSQHLS {
 
     this.hls.on(Hls.Events.MANIFEST_PARSED, (evt: string, data: any): void => {
       this.onManifestParsed(evt, data);
-      this.vsq.showTag(this.type);
     });
     this.hls.on(Hls.Events.LEVEL_SWITCHING, (evt: string, data: any): void => {
       this.hls.switchingLevels = true;
@@ -120,6 +119,9 @@ export default class VSQHLS {
       this.log("level loaded, canceling ratelimits");
       this.limiter.cancel();
       this.vsq.showTag(this.type);
+
+      if (this.flow.live)
+        this.vsq.resume();
     });
     this.hls.on(Hls.Events.ERROR, (evt: string, data: any): void => {
       this.onError(evt, data);

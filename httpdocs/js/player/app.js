@@ -2034,7 +2034,6 @@ System.register("player/VSQHLS", ["player/VSQ", "RateLimiter"], function (export
                     });
                     this.hls.on(Hls.Events.MANIFEST_PARSED, function (evt, data) {
                         _this.onManifestParsed(evt, data);
-                        _this.vsq.showTag(_this.type);
                     });
                     this.hls.on(Hls.Events.LEVEL_SWITCHING, function (evt, data) {
                         _this.hls.switchingLevels = true;
@@ -2049,6 +2048,8 @@ System.register("player/VSQHLS", ["player/VSQ", "RateLimiter"], function (export
                         _this.log("level loaded, canceling ratelimits");
                         _this.limiter.cancel();
                         _this.vsq.showTag(_this.type);
+                        if (_this.flow.live)
+                            _this.vsq.resume();
                     });
                     this.hls.on(Hls.Events.ERROR, function (evt, data) {
                         _this.onError(evt, data);
