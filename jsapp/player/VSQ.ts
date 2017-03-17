@@ -419,6 +419,7 @@ export class VSQ {
     this.removePoster();
     if (!this.hlsConf.bufferWhilePaused)
       this.hlsCall('stopLoad');
+
     this.triggerFlow("pause", undefined);
   }
 

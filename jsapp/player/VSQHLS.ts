@@ -121,10 +121,8 @@ export default class VSQHLS {
       this.limiter.cancel();
 
       if (this.flow.live && this.levelLoadError) {
-        this.vsq.resume();
+        this.hls.startLoad();
         this.vsq.showTag(this.type);
-        let tag = this.vsq.getVideoTags()[ type ];
-        tag.currentTime += 1;
         this.levelLoadError = false;
       }
     });
