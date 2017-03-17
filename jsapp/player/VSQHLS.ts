@@ -133,17 +133,16 @@ export default class VSQHLS {
   private initLimiter(): void {
     this.limiter = new RateLimiter();
     this.limiter.add("onNetworkError", () => {
-      this.flushBuffer();
       this.hls.startLoad();
-    }, 3*RateLimiter.SECOND, false);
+    }, 10*RateLimiter.SECOND, false);
 
     this.limiter.add("onSwapAudioCodec", () => {
       this.hls.swapAudioCodec();
-    }, 3*RateLimiter.SECOND, false);
+    }, 10*RateLimiter.SECOND, false);
 
     this.limiter.add("onRecoverMedia", () => {
       this.hls.recoverMediaError();
-    }, 3*RateLimiter.SECOND, false);
+    }, 10*RateLimiter.SECOND, false);
   }
 
   private log(...params: Object[]): void {

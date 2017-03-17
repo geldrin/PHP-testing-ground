@@ -2060,15 +2060,14 @@ System.register("player/VSQHLS", ["player/VSQ", "RateLimiter"], function (export
                     var _this = this;
                     this.limiter = new RateLimiter_2.default();
                     this.limiter.add("onNetworkError", function () {
-                        _this.flushBuffer();
                         _this.hls.startLoad();
-                    }, 3 * RateLimiter_2.default.SECOND, false);
+                    }, 10 * RateLimiter_2.default.SECOND, false);
                     this.limiter.add("onSwapAudioCodec", function () {
                         _this.hls.swapAudioCodec();
-                    }, 3 * RateLimiter_2.default.SECOND, false);
+                    }, 10 * RateLimiter_2.default.SECOND, false);
                     this.limiter.add("onRecoverMedia", function () {
                         _this.hls.recoverMediaError();
-                    }, 3 * RateLimiter_2.default.SECOND, false);
+                    }, 10 * RateLimiter_2.default.SECOND, false);
                 };
                 VSQHLS.prototype.log = function () {
                     var params = [];
