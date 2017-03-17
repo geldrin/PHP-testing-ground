@@ -2048,8 +2048,10 @@ System.register("player/VSQHLS", ["player/VSQ", "RateLimiter"], function (export
                     this.hls.on(Hls.Events.LEVEL_LOADED, function (evt, data) {
                         _this.log("level loaded, canceling ratelimits");
                         _this.limiter.cancel();
-                        if (_this.flow.live && _this.levelLoadError)
+                        if (_this.flow.live && _this.levelLoadError) {
                             _this.vsq.resume();
+                            _this.vsq.showTag(_this.type);
+                        }
                     });
                     this.hls.on(Hls.Events.ERROR, function (evt, data) {
                         _this.onError(evt, data);

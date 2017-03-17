@@ -120,8 +120,10 @@ export default class VSQHLS {
       this.log("level loaded, canceling ratelimits");
       this.limiter.cancel();
 
-      if (this.flow.live && this.levelLoadError)
+      if (this.flow.live && this.levelLoadError) {
         this.vsq.resume();
+        this.vsq.showTag(this.type);
+      }
     });
     this.hls.on(Hls.Events.ERROR, (evt: string, data: any): void => {
       this.onError(evt, data);
