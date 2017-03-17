@@ -2050,8 +2050,10 @@ System.register("player/VSQHLS", ["player/VSQ", "RateLimiter"], function (export
                         _this.log("level loaded, canceling ratelimits");
                         _this.limiter.cancel();
                         if (_this.flow.live && _this.levelLoadError) {
-                            _this.hls.startLoad();
                             _this.vsq.showTag(_this.type);
+                            var tag = _this.vsq.getVideoTags()[type];
+                            tag.currentTime += 1;
+                            _this.hls.startLoad();
                             _this.levelLoadError = false;
                         }
                     });
@@ -2208,10 +2210,7 @@ System.register("player/VSQHLS", ["player/VSQ", "RateLimiter"], function (export
                 };
                 VSQHLS.prototype.onLevelLoadError = function (evt, data) {
                     var level = data.context.level;
-                    if (level != 0 && level <= this.video['vsq-labels'].length - 1)
-                        this.hls.currentLevel = level - 1;
-                    else
-                        this.limiter.trigger("onNetworkError");
+                    this.limiter.trigger("onNetworkError");
                 };
                 VSQHLS.prototype.onMediaError = function (evt, data) {
                     switch (data.details) {

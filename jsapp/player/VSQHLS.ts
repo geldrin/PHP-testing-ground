@@ -121,8 +121,10 @@ export default class VSQHLS {
       this.limiter.cancel();
 
       if (this.flow.live && this.levelLoadError) {
-        this.hls.startLoad();
         this.vsq.showTag(this.type);
+        let tag = this.vsq.getVideoTags()[ type ];
+        tag.currentTime += 1;
+        this.hls.startLoad();
         this.levelLoadError = false;
       }
     });
@@ -278,11 +280,11 @@ export default class VSQHLS {
   private onLevelLoadError(evt: string, data: any): void {
     let level = data.context.level;
 
-    // vissza lepunk egy minosegi szintet es imadkozunk hogy az mukodni fog
-    if (level != 0 && level <= this.video['vsq-labels'].length - 1)
-      this.hls.currentLevel = level - 1;
-    else // nincs mire vissza lepni, ujra probalkozni vegtelensegig
-      this.limiter.trigger("onNetworkError");
+    // hls.js automatan lep vissza a 0-as minosegi szintre,
+    // es ha automata qualityn volt a user akkor vissza
+    // ha manualisan allitjuk a szintet akkor DoS-olni fogjuk a servert
+    // masodik reconnect utan...
+    this.limiter.trigger("onNetworkError");
   }
 
   private onMediaError(evt: string, data: any): void {
