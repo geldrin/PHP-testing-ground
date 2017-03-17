@@ -2008,6 +2008,7 @@ System.register("player/VSQHLS", ["player/VSQ", "RateLimiter"], function (export
         execute: function () {
             VSQHLS = (function () {
                 function VSQHLS(vsq, type) {
+                    this.levelLoadError = false;
                     this.vsq = vsq;
                     this.flowroot = vsq.getFlowRoot();
                     this.cfg = vsq.getConfig();
@@ -2048,7 +2049,7 @@ System.register("player/VSQHLS", ["player/VSQ", "RateLimiter"], function (export
                         _this.log("level loaded, canceling ratelimits");
                         _this.limiter.cancel();
                         _this.vsq.showTag(_this.type);
-                        if (_this.flow.live)
+                        if (_this.flow.live && _this.levelLoadError)
                             _this.vsq.resume();
                     });
                     this.hls.on(Hls.Events.ERROR, function (evt, data) {
@@ -2184,6 +2185,7 @@ System.register("player/VSQHLS", ["player/VSQ", "RateLimiter"], function (export
                                     break;
                                 case Hls.ErrorDetails.LEVEL_LOAD_ERROR:
                                     if (data.response && data.response.code === 404) {
+                                        this.levelLoadError = true;
                                         this.vsq.hideTag(this.type);
                                         this.onLevelLoadError(evt, data);
                                         return;

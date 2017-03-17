@@ -19,6 +19,7 @@ export default class VSQHLS {
   private hls: any;
   private limiter: RateLimiter;
   private type: VSQType;
+  private levelLoadError = false;
 
   constructor(vsq: VSQ, type: VSQType) {
     this.vsq = vsq;
@@ -120,7 +121,7 @@ export default class VSQHLS {
       this.limiter.cancel();
       this.vsq.showTag(this.type);
 
-      if (this.flow.live)
+      if (this.flow.live && this.levelLoadError)
         this.vsq.resume();
     });
     this.hls.on(Hls.Events.ERROR, (evt: string, data: any): void => {
@@ -246,6 +247,7 @@ export default class VSQHLS {
 
           case Hls.ErrorDetails.LEVEL_LOAD_ERROR:
             if (data.response && data.response.code === 404) {
+              this.levelLoadError = true;
               this.vsq.hideTag(this.type);
               this.onLevelLoadError(evt, data);
               return;
