@@ -1574,8 +1574,13 @@ System.register("player/VSQ/Timeline", ["player/VSQ/BasePlugin", "player/VSQ/Mod
                                     return [4 /*yield*/, Modal_3.Modal.askQuestion(question, this.l.get('yes'), this.l.get('no'), Modal_3.Modal.QUESTION_TRUE_FIRST)];
                                 case 1:
                                     shouldResume = _a.sent();
-                                    if (shouldResume)
-                                        this.vsq.triggerFlow("seek", this.watched);
+                                    if (shouldResume) {
+                                        this.vsq.resume();
+                                    }
+                                    else {
+                                        this.vsq.seek(0);
+                                        this.vsq.resume();
+                                    }
                                     return [2 /*return*/];
                             }
                         });
@@ -1621,7 +1626,6 @@ System.register("player/VSQ/Timeline", ["player/VSQ/BasePlugin", "player/VSQ/Mod
                         _this.tooltip.text(str);
                         var width = _this.tooltip.outerWidth(true);
                         var left = _this.getDeltaFromEvent(e, offset) - width / 2;
-                        console.log(width, left);
                         if (left < 0)
                             left = 0;
                         if (left > size - width)
@@ -2048,7 +2052,6 @@ System.register("player/VSQHLS", ["player/VSQ", "RateLimiter"], function (export
                 VSQHLS.prototype.initHls = function (type) {
                     var _this = this;
                     var cfg = {
-                        debug: VSQ_6.VSQ.debug,
                         liveMaxLatencyDurationCount: 6,
                         fragLoadingMaxRetry: 0,
                         manifestLoadingMaxRetry: 0,

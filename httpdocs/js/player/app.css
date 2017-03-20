@@ -151,7 +151,8 @@
   display: block;
 }
 #player .vsq-modal .vsq-presence,
-#player .vsq-modal .vsq-login {
+#player .vsq-modal .vsq-login,
+#player .vsq-modal .vsq-question {
   background: #fff;
 }
 #player .vsq-modal .vsq-presence .vsq-button-continue {

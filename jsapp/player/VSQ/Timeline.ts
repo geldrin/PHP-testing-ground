@@ -111,8 +111,14 @@ export default class Timeline extends BasePlugin {
       Modal.QUESTION_TRUE_FIRST
     );
 
-    if (shouldResume)
-      this.vsq.triggerFlow("seek", this.watched);
+    if (shouldResume) {
+      // itt nem kell seekelnunk mert a default hogy onnan probaljuk
+      // kezdeni ahol abbahagyta a user
+      this.vsq.resume();
+    } else {
+      this.vsq.seek(0);
+      this.vsq.resume();
+    }
   }
 
   public load(): void {
@@ -164,7 +170,6 @@ export default class Timeline extends BasePlugin {
       let width = this.tooltip.outerWidth(true);
 
       let left = this.getDeltaFromEvent(e, offset) - width / 2;
-      console.log(width, left);
       if (left < 0)
         left = 0;
 
