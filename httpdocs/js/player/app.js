@@ -240,6 +240,9 @@ System.register("Tools", [], function (exports_4, context_4) {
                     }
                     return Tools.zeroPad(m) + ":" + Tools.zeroPad(s);
                 };
+                Tools.refresh = function () {
+                    location.reload(true);
+                };
                 return Tools;
             }());
             exports_4("default", Tools);
@@ -1035,7 +1038,7 @@ System.register("player/VSQ/Modal", ["player/VSQ", "player/VSQAPI", "Tools", "Es
                         return __generator(this, function (_a) {
                             switch (_a.label) {
                                 case 0:
-                                    _a.trys.push([0, 2, , 3]);
+                                    _a.trys.push([0, 2, , 4]);
                                     return [4 /*yield*/, VSQAPI_1.default.POST("users", "authenticate", params)];
                                 case 1:
                                     data = _a.sent();
@@ -1053,12 +1056,15 @@ System.register("player/VSQ/Modal", ["player/VSQ", "player/VSQAPI", "Tools", "Es
                                             Modal.showLogin(errMessage);
                                             break;
                                     }
-                                    return [3 /*break*/, 3];
+                                    return [3 /*break*/, 4];
                                 case 2:
                                     err_1 = _a.sent();
-                                    Modal.showError(this.l.get('networkerror'));
-                                    return [3 /*break*/, 3];
-                                case 3: return [2 /*return*/];
+                                    return [4 /*yield*/, Modal.showTransientMessage(this.l.get('networkerror'))];
+                                case 3:
+                                    _a.sent();
+                                    Tools_3.default.refresh();
+                                    return [3 /*break*/, 4];
+                                case 4: return [2 /*return*/];
                             }
                         });
                     });
@@ -1243,10 +1249,10 @@ System.register("player/VSQ/Modal", ["player/VSQ", "player/VSQAPI", "Tools", "Es
         }
     };
 });
-System.register("player/VSQ/Pinger", ["player/VSQAPI", "player/VSQ/BasePlugin", "player/VSQ/Modal"], function (exports_12, context_12) {
+System.register("player/VSQ/Pinger", ["player/VSQAPI", "player/VSQ/BasePlugin", "player/VSQ/Modal", "Tools"], function (exports_12, context_12) {
     "use strict";
     var __moduleName = context_12 && context_12.id;
-    var VSQAPI_2, BasePlugin_3, Modal_1, Pinger;
+    var VSQAPI_2, BasePlugin_3, Modal_1, Tools_4, Pinger;
     return {
         setters: [
             function (VSQAPI_2_1) {
@@ -1257,6 +1263,9 @@ System.register("player/VSQ/Pinger", ["player/VSQAPI", "player/VSQ/BasePlugin", 
             },
             function (Modal_1_1) {
                 Modal_1 = Modal_1_1;
+            },
+            function (Tools_4_1) {
+                Tools_4 = Tools_4_1;
             }
         ],
         execute: function () {
@@ -1265,6 +1274,7 @@ System.register("player/VSQ/Pinger", ["player/VSQAPI", "player/VSQ/BasePlugin", 
                 function Pinger(vsq) {
                     var _this = _super.call(this, vsq) || this;
                     _this.pluginName = "Pinger";
+                    _this.waiting = false;
                     _this.log("scheduling request");
                     _this.schedule();
                     return _this;
@@ -1275,7 +1285,8 @@ System.register("player/VSQ/Pinger", ["player/VSQAPI", "player/VSQ/BasePlugin", 
                         clearTimeout(this.timer);
                     this.timer = setTimeout(function () {
                         _this.timer = null;
-                        _this.ping();
+                        if (!_this.waiting)
+                            _this.ping();
                         _this.schedule();
                     }, this.cfg.pingSeconds * 1000);
                 };
@@ -1284,19 +1295,23 @@ System.register("player/VSQ/Pinger", ["player/VSQAPI", "player/VSQ/BasePlugin", 
                         return __generator(this, function (_a) {
                             switch (_a.label) {
                                 case 0:
-                                    if (errData.invalidtoken || errData.sessionexpired) {
-                                        Modal_1.Modal.showError(message);
-                                        return [2 /*return*/];
-                                    }
-                                    if (!!errData.loggedin)
+                                    if (!(errData.invalidtoken || errData.sessionexpired))
                                         return [3 /*break*/, 2];
+                                    return [4 /*yield*/, Modal_1.Modal.showTransientMessage(message)];
+                                case 1:
+                                    _a.sent();
+                                    Tools_4.default.refresh();
+                                    return [2 /*return*/];
+                                case 2:
+                                    if (!!errData.loggedin)
+                                        return [3 /*break*/, 4];
                                     this.vsq.pause();
                                     return [4 /*yield*/, Modal_1.Modal.tryLogin(message)];
-                                case 1:
+                                case 3:
                                     _a.sent();
                                     this.vsq.resume();
                                     return [2 /*return*/];
-                                case 2: return [2 /*return*/];
+                                case 4: return [2 /*return*/];
                             }
                         });
                     });
@@ -1307,9 +1322,12 @@ System.register("player/VSQ/Pinger", ["player/VSQAPI", "player/VSQ/BasePlugin", 
                         return __generator(this, function (_a) {
                             switch (_a.label) {
                                 case 0:
-                                    _a.trys.push([0, 2, , 3]);
-                                    return [4 /*yield*/, VSQAPI_2.default.POST("users", "ping", this.cfg.parameters)];
+                                    this.waiting = true;
+                                    _a.label = 1;
                                 case 1:
+                                    _a.trys.push([1, 3, , 4]);
+                                    return [4 /*yield*/, VSQAPI_2.default.POST("users", "ping", this.cfg.parameters)];
+                                case 2:
                                     data = _a.sent();
                                     this.log("ping", data);
                                     switch (data.result) {
@@ -1323,12 +1341,14 @@ System.register("player/VSQ/Pinger", ["player/VSQAPI", "player/VSQ/BasePlugin", 
                                             this.handleError(errMessage, errData);
                                             break;
                                     }
-                                    return [3 /*break*/, 3];
-                                case 2:
+                                    return [3 /*break*/, 4];
+                                case 3:
                                     err_2 = _a.sent();
                                     Modal_1.Modal.showError(this.l.get('networkerror'));
-                                    return [3 /*break*/, 3];
-                                case 3: return [2 /*return*/];
+                                    return [3 /*break*/, 4];
+                                case 4:
+                                    this.waiting = false;
+                                    return [2 /*return*/];
                             }
                         });
                     });
@@ -1346,7 +1366,7 @@ System.register("player/VSQ/Pinger", ["player/VSQAPI", "player/VSQ/BasePlugin", 
 System.register("player/VSQ/ProgressReport", ["player/VSQAPI", "player/VSQ/BasePlugin", "player/VSQ/Modal", "Tools"], function (exports_13, context_13) {
     "use strict";
     var __moduleName = context_13 && context_13.id;
-    var VSQAPI_3, BasePlugin_4, Modal_2, Tools_4, ProgressReport;
+    var VSQAPI_3, BasePlugin_4, Modal_2, Tools_5, ProgressReport;
     return {
         setters: [
             function (VSQAPI_3_1) {
@@ -1358,8 +1378,8 @@ System.register("player/VSQ/ProgressReport", ["player/VSQAPI", "player/VSQ/BaseP
             function (Modal_2_1) {
                 Modal_2 = Modal_2_1;
             },
-            function (Tools_4_1) {
-                Tools_4 = Tools_4_1;
+            function (Tools_5_1) {
+                Tools_5 = Tools_5_1;
             }
         ],
         execute: function () {
@@ -1382,7 +1402,7 @@ System.register("player/VSQ/ProgressReport", ["player/VSQAPI", "player/VSQ/BaseP
                         return __generator(this, function (_a) {
                             switch (_a.label) {
                                 case 0:
-                                    this.lastReportTime = Tools_4.default.now();
+                                    this.lastReportTime = Tools_5.default.now();
                                     _a.label = 1;
                                 case 1:
                                     _a.trys.push([1, 5, , 6]);
@@ -1425,7 +1445,7 @@ System.register("player/VSQ/ProgressReport", ["player/VSQAPI", "player/VSQ/BaseP
                 ProgressReport.prototype.reportIfNeeded = function (force) {
                     if (force || this.lastReportTime == null)
                         this.report();
-                    var now = Tools_4.default.now();
+                    var now = Tools_5.default.now();
                     if (now - this.lastReportTime > this.interval)
                         this.report();
                 };
@@ -1460,7 +1480,7 @@ System.register("player/VSQ/ProgressReport", ["player/VSQAPI", "player/VSQ/BaseP
 System.register("player/VSQ/Timeline", ["player/VSQ/BasePlugin", "player/VSQ/Modal", "Tools", "RateLimiter"], function (exports_14, context_14) {
     "use strict";
     var __moduleName = context_14 && context_14.id;
-    var BasePlugin_5, Modal_3, Tools_5, RateLimiter_1, Timeline;
+    var BasePlugin_5, Modal_3, Tools_6, RateLimiter_1, Timeline;
     return {
         setters: [
             function (BasePlugin_5_1) {
@@ -1469,8 +1489,8 @@ System.register("player/VSQ/Timeline", ["player/VSQ/BasePlugin", "player/VSQ/Mod
             function (Modal_3_1) {
                 Modal_3 = Modal_3_1;
             },
-            function (Tools_5_1) {
-                Tools_5 = Tools_5_1;
+            function (Tools_6_1) {
+                Tools_6 = Tools_6_1;
             },
             function (RateLimiter_1_1) {
                 RateLimiter_1 = RateLimiter_1_1;
@@ -1548,7 +1568,7 @@ System.register("player/VSQ/Timeline", ["player/VSQ/BasePlugin", "player/VSQ/Mod
                                 case 0:
                                     if (this.watched < 10)
                                         return [2 /*return*/];
-                                    from = Tools_5.default.formatDuration(this.watched);
+                                    from = Tools_6.default.formatDuration(this.watched);
                                     question = this.l.get("player_shouldresume");
                                     question = question.replace(/%from%/gi, from);
                                     return [4 /*yield*/, Modal_3.Modal.askQuestion(question, this.l.get('yes'), this.l.get('no'), Modal_3.Modal.QUESTION_TRUE_FIRST)];
@@ -1594,7 +1614,7 @@ System.register("player/VSQ/Timeline", ["player/VSQ/BasePlugin", "player/VSQ/Mod
                         var str;
                         if (percentage <= _this.getWatchedPercent()) {
                             var seconds = percentage * _this.flow.video.duration;
-                            str = Tools_5.default.formatDuration(seconds);
+                            str = Tools_6.default.formatDuration(seconds);
                         }
                         else
                             str = _this.l.get("player_seekbardisabled");
@@ -1630,7 +1650,7 @@ System.register("player/VSQ/Timeline", ["player/VSQ/BasePlugin", "player/VSQ/Mod
 System.register("player/VSQ/PresenceCheck", ["player/VSQ/BasePlugin", "player/VSQ/Modal", "Tools"], function (exports_15, context_15) {
     "use strict";
     var __moduleName = context_15 && context_15.id;
-    var BasePlugin_6, Modal_4, Tools_6, PresenceCheck;
+    var BasePlugin_6, Modal_4, Tools_7, PresenceCheck;
     return {
         setters: [
             function (BasePlugin_6_1) {
@@ -1639,8 +1659,8 @@ System.register("player/VSQ/PresenceCheck", ["player/VSQ/BasePlugin", "player/VS
             function (Modal_4_1) {
                 Modal_4 = Modal_4_1;
             },
-            function (Tools_6_1) {
-                Tools_6 = Tools_6_1;
+            function (Tools_7_1) {
+                Tools_7 = Tools_7_1;
             }
         ],
         execute: function () {
@@ -1659,14 +1679,14 @@ System.register("player/VSQ/PresenceCheck", ["player/VSQ/BasePlugin", "player/VS
                     return _this;
                 }
                 PresenceCheck.prototype.updateUncheckedTime = function () {
-                    var now = Tools_6.default.now();
+                    var now = Tools_7.default.now();
                     this.notCheckedFor += now - this.lastCheckTime;
                     this.lastCheckTime = now;
                 };
                 PresenceCheck.prototype.resetInactivity = function () {
                     this.log("resetting");
                     this.notCheckedFor = 0;
-                    this.lastCheckTime = Tools_6.default.now();
+                    this.lastCheckTime = Tools_7.default.now();
                 };
                 PresenceCheck.prototype.handleCheckTime = function () {
                     if (!this.playing)
@@ -1736,7 +1756,7 @@ System.register("player/VSQ/PresenceCheck", ["player/VSQ/BasePlugin", "player/VS
 System.register("player/VSQ/Statistics", ["player/VSQ", "player/VSQAPI", "player/VSQ/BasePlugin", "Tools"], function (exports_16, context_16) {
     "use strict";
     var __moduleName = context_16 && context_16.id;
-    var VSQ_5, VSQAPI_4, BasePlugin_7, Tools_7, Report, Statistics;
+    var VSQ_5, VSQAPI_4, BasePlugin_7, Tools_8, Report, Statistics;
     return {
         setters: [
             function (VSQ_5_1) {
@@ -1748,8 +1768,8 @@ System.register("player/VSQ/Statistics", ["player/VSQ", "player/VSQAPI", "player
             function (BasePlugin_7_1) {
                 BasePlugin_7 = BasePlugin_7_1;
             },
-            function (Tools_7_1) {
-                Tools_7 = Tools_7_1;
+            function (Tools_8_1) {
+                Tools_8 = Tools_8_1;
             }
         ],
         execute: function () {
@@ -1841,7 +1861,7 @@ System.register("player/VSQ/Statistics", ["player/VSQ", "player/VSQAPI", "player
                     });
                 };
                 Statistics.prototype.reportIfNeeded = function () {
-                    var now = Tools_7.default.now();
+                    var now = Tools_8.default.now();
                     var report = new Report(this.action);
                     switch (this.action) {
                         case "PLAY":

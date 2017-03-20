@@ -168,7 +168,8 @@ export class Modal {
       }
 
     } catch(err) {
-      Modal.showError(this.l.get('networkerror'));
+      await Modal.showTransientMessage(this.l.get('networkerror'));
+      Tools.refresh();
     }
   }
 

@@ -90,4 +90,8 @@ export default class Tools {
 
     return Tools.zeroPad(m) + ":" + Tools.zeroPad(s);
   }
+
+  public static refresh(): void {
+    location.reload(true);
+  }
 }

@@ -17,6 +17,7 @@ interface PingErr {
 export default class Pinger extends BasePlugin {
   protected pluginName = "Pinger";
   protected timer: number | null;
+  private waiting = false;
 
   constructor(vsq: VSQ) {
     super(vsq);
@@ -30,14 +31,17 @@ export default class Pinger extends BasePlugin {
 
     this.timer = setTimeout(() => {
       this.timer = null;
-      this.ping();
+      if (!this.waiting)
+        this.ping();
+
       this.schedule();
     }, this.cfg.pingSeconds * 1000);
   }
 
   private async handleError(message: string, errData: PingErr) {
     if ( errData.invalidtoken || errData.sessionexpired ) {
-      Modal.showError(message);
+      await Modal.showTransientMessage(message);
+      Tools.refresh();
       return;
     }
 
@@ -50,6 +54,7 @@ export default class Pinger extends BasePlugin {
   }
 
   private async ping() {
+    this.waiting = true;
     try {
       let data = await VSQAPI.POST("users", "ping", this.cfg.parameters);
       this.log("ping", data);
@@ -70,6 +75,7 @@ export default class Pinger extends BasePlugin {
     } catch(err) {
       Modal.showError(this.l.get('networkerror'));
     }
+    this.waiting = false;
   }
 
   public load(): void {
