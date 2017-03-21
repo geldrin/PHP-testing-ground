@@ -252,7 +252,7 @@ class Watcher {
     
     if (!$success || self::$debug_mode) {
       $msg .= sprintf(
-        "\n - return code: %d\n - command: '%s'". (!empty($j->getOutput()) ? "\n - output: '%s'" : null),
+        "\n - return code: %d\n - command: '%s'". ($j->getOutput() ? "\n - output: '%s'" : null),
         $j->getCode(),
         $j->command,
         $j->getOutput()
