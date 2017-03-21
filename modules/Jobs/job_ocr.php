@@ -820,8 +820,8 @@ global $onice;
 	unset($identify);
     
   $invert = null;
-  if ($mean < .5) $invert = " -negate"; // ha a kep tobbsegeben sotet, akkor invert
-  $cmd_convert = $onice ." convert ". $imagepath . $invert ." -colorspace gray +repage -auto-level -resize 200% -threshold 35% -type bilevel -trim PNG:". $out_img;
+  if ($mean < .5) { $invert = " -negate"; } // ha a kep tobbsegeben sotet, akkor invert
+  $cmd_convert = $onice ." convert ". $imagepath . $invert ." +repage -resize 200% +dither -colors 2 -colorspace gray -contrast-stretch 0 -trim PNG:". $out_img;
   $imginvert = new runExt($cmd_convert, 10.0);
   
   if (!$imginvert->run()) {
