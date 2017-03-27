@@ -1,31 +1,36 @@
-# OpenSSL configuration to generate a new key with signing requst for a x509v3 
 [ req ]
-prompt             = no
-encrypt_key        = no
+distinguished_name             = req_distinguished_name
+req_extensions                 = v3_req
 
-# base request
-distinguished_name = req_distinguished_name
-
-# extensions
-req_extensions     = v3_req
-
-# distinguished_name
 [ req_distinguished_name ]
-countryName            = "HU"                           # C=
-stateOrProvinceName    = "Budapest"                     # ST=
-localityName           = "Budapest"                     # L=
-postalCode             = "1014"                         # L/postalcode=
-streetAddress          = "Uri utca 21."                 # L/street=
-organizationName       = "PA Alapitvany"                # O=
-organizationalUnitName = "Videosquare"                  # OU=
-commonName             = "pallasvideo.hu"               # CN=
-emailAddress           = "pada@videosqr.com"            # CN/emailAddress=
+0.organizationName             = Organization Name (company)
+organizationalUnitName         = Organizational Unit Name (department, division)
+organizationalUnitName_max     = 64
+emailAddress                   = Email Address
+emailAddress_max               = 64
+localityName                   = Locality Name (city, district)
+stateOrProvinceName            = State or Province Name (full name)
+countryName                    = Country Name (2 letter code)
+countryName_min                = 2
+countryName_max                = 2
+commonName                     = Common Name (hostname, IP, or your name)
+commonName_max                 = 64
 
-# req_extensions
+# CSR specifics in this section
+countryName_default            = HU
+stateOrProvinceName_default    = Budapest
+localityName_default           = Budapest
+0.organizationName_default     = Pallas Athene
+organizationalUnitName_default = Pallas Athene IT
+commonName_default             = pallasvideo.hu
+emailAddress_default           = support@videosqr.com
+
 [ v3_req ]
-# The subject alternative name extension allows various literal values to be 
-# included in the configuration file
-# http://www.openssl.org/docs/apps/x509v3_config.html
-#subjectAltName  = DNS:www.example.com,DNS:www2.example.com # multidomain certificate
+basicConstraints = CA:FALSE
+keyUsage = nonRepudiation, digitalSignature, keyEncipherment
+subjectAltName = @alt_names
 
-# vim:ft=config
+[alt_names]
+DNS.1 = pallasvideo.hu
+DNS.2 = www.pallasvideo.hu
+DNS.3 = vsq-static.pallasvideo.hu
