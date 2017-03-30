@@ -631,8 +631,8 @@ function copyMediaToFrontEnd($recording, $profile) {
 	if ( $recording['iscontent'] != 0 ) $idx = "content";
 
 	// SSH command templates
-	$ssh_command = "ssh -i " . $app->config['ssh_key'] . " " . $app->config['ssh_user'] . "@" . $recording[$idx .'mastersourceip'] . " ";
-	$scp_command = "scp -B -r -i " . $app->config['ssh_key'] . " ";
+	$ssh_command = "ssh -q -i " . $app->config['ssh_key'] . " " . $app->config['ssh_user'] . "@" . $recording[$idx .'mastersourceip'] . " ";
+	$scp_command = "scp -q -B -r -i " . $app->config['ssh_key'] . " ";
 	$recording['output_ssh_filename'] = $app->config['ssh_user'] . "@" . $recording[$idx . 'mastersourceip'] . ":" . $recording['recording_remote_path'];
 
 	// Create remote directories, does nothing if exists
