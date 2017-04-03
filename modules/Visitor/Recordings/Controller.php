@@ -480,7 +480,6 @@ class Controller extends \Visitor\Controller {
     ;
 
     $this->jsonOutput( $flashdata );
-
   }
 
   public function deleteattachmentAction() {
