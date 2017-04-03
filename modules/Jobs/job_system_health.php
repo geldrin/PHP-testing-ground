@@ -38,14 +38,14 @@ if ( iswindows() ) {
 
 // Default configuration
 $config = array(
-	'storage_alarm_warning'	  	=> 80,	  // Free space warning [%]
-	'storage_alarm_critical'  	=> 90,	  // Free space critical [%]
-	'report_resend_timeout' 	=> 10*60, // [mins]
-	'db_alert_mins' 			=> 30,    // DB alert repeat every N [mins]
-	'storage_check_mins'		=> 60,    // Storage check every N [mins]
-	'db_check_mins'				=> 60,	  // DB configuration check every N [mins]
-	'ssh_check_mins'			=> 10,	  // SSH front-end ping every N [mins]
-	'sleep_time'				=> 60	  // Sleep time between each check [sec]
+	'storage_alarm_warning'	  	=> 80,	    // Free space warning [%]
+	'storage_alarm_critical'  	=> 90,	    // Free space critical [%]
+	'report_resend_timeout' 	=> 24*3600, // [sec]
+	'db_alert_mins' 			=> 60,      // DB alert repeat every N [mins]
+	'storage_check_mins'		=> 120,      // Storage check every N [mins]
+	'db_check_mins'				=> 120,	    // DB configuration check every N [mins]
+	'ssh_check_mins'			=> 60,	    // SSH front-end ping every N [mins]
+	'sleep_time'				=> 60	    // Sleep time between each check [sec]
 );
 
 // Load job configuration from config.php and overwrite chosen options
@@ -298,7 +298,7 @@ while( !is_file( $app->config['datapath'] . 'jobs/' . $myjobid . '.stop' ) and !
         
         for ( $i = 0; $i < count($storages2check[$node_role]); $i++) {
             $laststatus = $storages2check[$node_role][$i]['status'];
-            $diskinfo = checkDiskSpace($storages2check[$node_role][$i]['path']);
+			$diskinfo = checkDiskSpace($storages2check[$node_role][$i]['path']);
             if ( $diskinfo === false ) {
                 $msg .= "Cannot find storage path: " . $storages2check[$node_role][$i]['path'] . ". PLEASE CHECK!\n";
                 $storages2check[$node_role][$i]['status'] = "CRITICAL";
@@ -368,103 +368,96 @@ while( !is_file( $app->config['datapath'] . 'jobs/' . $myjobid . '.stop' ) and !
     
     // ## SSH ping all frontends from converter
     if ( $firstround or ( $minutes % $config['ssh_check_mins'] ) == 0 ) {
+
         if ( ( $node_role == "converter" ) and $usedb ) {
             $msg = "";
             $ssh_all_ok = true;
             $ssh_status = "";
             $values = array('statusnetwork' => $node_info['statusnetwork']);
             $node_frontends = getNodesByType("frontend");
-            if ( $node_frontends ) {
-                
-                // SSH ping: Loop through front-ends
-                while ( !$node_frontends->EOF ) {
 
-                    $node_frontend = array();
-                    $node_frontend = $node_frontends->fields;
-                                        
-                    $ssh_unavailable_flag = $app->config['sshunavailableflagpath'] . "." . $node_frontend['server'];
-                    
-                    $output = array();
-                    $ssh_command = "ssh -i " . $app->config['ssh_key'] . " " . $app->config['ssh_user'] . "@" . $node_frontend['server'] . " date 2>&1";
-                    exec($ssh_command, $output, $result);                    
-                    $output_string = implode("\n", $output);
-                    if ( $result != 0 ) {
+			foreach ( $node_frontends as $key => $node_frontend ) {
 
-                        // SSH connection to front-end was not successful (problem first detected)
-                        if ( !file_exists($ssh_unavailable_flag) ) {
-                        
-                            $ssh_outage[$node_frontend['server']]['outage'] = true;
-                            $ssh_outage[$node_frontend['server']]['outage_starttime'] = time();
-                            
-                            // Log error
-                            $err = touch($ssh_unavailable_flag);
-                            if ( $err === false ) {
-                                $debug->log($jconf['log_dir'], $myjobid . ".log", "[ERROR] Cannot create SSH unavailable flag file at " . $ssh_unavailable_flag . ". CHECK!", $sendmail = false);
-                            } else {
-                                $outage_time = time() - $ssh_outage[$node_frontend['server']]['outage_starttime'];
-                                $msg .= "[ERROR] Unsuccessful SSH ping to: " . $node_frontend['server'] . ". SSH has been unavailable for " . seconds2DaysHoursMinsSecs($outage_time) . " time.\n\tCommand: " . $ssh_command . "\n\tOutput: " . $output_string . "\n\n";
-                            }
+				$ssh_unavailable_flag = $app->config['sshunavailableflagpath'] . "." . $node_frontend['server'];
+				
+				$output = array();
+				$ssh_command = "ssh -i " . $app->config['ssh_key'] . " " . $app->config['ssh_user'] . "@" . $node_frontend['server'] . " date 2>&1";
+				exec($ssh_command, $output, $result);                    
+				$output_string = implode("\n", $output);
+				if ( $result != 0 ) {
 
-                        } else {
+					// SSH connection to front-end was not successful (problem first detected)
+					if ( !file_exists($ssh_unavailable_flag) ) {
+					
+						$ssh_outage[$node_frontend['server']]['outage'] = true;
+						$ssh_outage[$node_frontend['server']]['outage_starttime'] = time();
+						
+						// Log error
+						$err = touch($ssh_unavailable_flag);
+						if ( $err === false ) {
+							$debug->log($jconf['log_dir'], $myjobid . ".log", "[ERROR] Cannot create SSH unavailable flag file at " . $ssh_unavailable_flag . ". CHECK!", $sendmail = false);
+						} else {
+							$outage_time = time() - $ssh_outage[$node_frontend['server']]['outage_starttime'];
+							$msg .= "[ERROR] Unsuccessful SSH ping to: " . $node_frontend['server'] . ". SSH has been unavailable for " . seconds2DaysHoursMinsSecs($outage_time) . " time.\n\tCommand: " . $ssh_command . "\n\tOutput: " . $output_string . "\n\n";
+						}
 
-                            if ( !isset($ssh_outage[$node_frontend['server']]) ) {
-                                $ssh_outage[$node_frontend['server']]['outage'] = true;
-                                $ssh_outage[$node_frontend['server']]['outage_starttime'] = time();
-                            }
-                        
-                            // Send notice in every additional 30 minutes
-                            $ssh_outage_minutes = floor( ( time() - $ssh_outage[$node_frontend['server']]['outage_starttime'] ) / 60 );
-                            if ( ( $ssh_outage_minutes % 30 ) == 0 ) {
-                                $outage_time = time() - $ssh_outage[$node_frontend['server']]['outage_starttime'];
-                                $msg .= "[ERROR] Unsuccessful SSH ping to: " . $node_frontend['server'] . ". SSH has been unavailable for " . seconds2DaysHoursMinsSecs($outage_time) . " time. \n\tCommand: " . $ssh_command . "\n\tOutput: " . $output_string. "\n\n";
-                            }               
-                        }
+					} else {
 
-                        $ssh_status .= "disabledfrontendunreachable:" . $node_frontend['server'];
+						if ( !isset($ssh_outage[$node_frontend['server']]) ) {
+							$ssh_outage[$node_frontend['server']]['outage'] = true;
+							$ssh_outage[$node_frontend['server']]['outage_starttime'] = time();
+						}
+				
+						// Send notice in every additional 30 minutes
+						$ssh_outage_minutes = floor( ( time() - $ssh_outage[$node_frontend['server']]['outage_starttime'] ) / 60 );
+						if ( ( $ssh_outage_minutes % 30 ) == 0 ) {
+							$outage_time = time() - $ssh_outage[$node_frontend['server']]['outage_starttime'];
+							$msg .= "[ERROR] Unsuccessful SSH ping to: " . $node_frontend['server'] . ". SSH has been unavailable for " . seconds2DaysHoursMinsSecs($outage_time) . " time. \n\tCommand: " . $ssh_command . "\n\tOutput: " . $output_string. "\n\n";
+						}               
+					}
 
-                        // At least one SSH connection problem is pending
-                        $ssh_all_ok = false;
-                        
-                    } else {
-                        
-                        if ( !isset($ssh_outage[$node_frontend['server']]) ) {
-                            $ssh_outage[$node_frontend['server']]['outage'] = false;
-                            $ssh_outage[$node_frontend['server']]['outage_starttime'] = time();
-                        }
-                            
-                        // Remove SSHUNAVAILABLE flag if SSH was recovered
-                        if ( file_exists($ssh_unavailable_flag) ) {
-                            $err = unlink($ssh_unavailable_flag);
-                            if ( $err === false ) {
-                                $debug->log($jconf['log_dir'], $myjobid . ".log", "[ERROR] Cannot remove SSH unavailable flag file at " . $ssh_unavailable_flag . ". Will prevent jobs from download/upload. CHECK!", $sendmail = false);
-                            } else {
-                                $outage_time = time() - $ssh_outage[$node_frontend['server']]['outage_starttime'];
-                                $msg .= "[OK] Front-end " . $node_frontend['server'] . " is back after " . seconds2DaysHoursMinsSecs($outage_time) . "\n\n";
-                            }
-                        }
-        
-                        // Reinit flags
-                        $ssh_outage[$node_frontend['server']]['outage'] = false;
-                        $ssh_outage[$node_frontend['server']]['outage_starttime'] = 0;
-                        
-                    }
-                    
-                    $node_frontends->MoveNext();
-                }
-                
-                // Status changed back to OK
-                if ( ( $ssh_all_ok ) and ( $node_info['statusnetwork'] != "ok" ) ) {
-                    updateInfrastructureNodeStatus($node_info['id'], "statusnetwork", "ok");
-                } else {
-                    updateInfrastructureNodeStatus($node_info['id'], "statusnetwork", $ssh_status);
-                }
-            }
+					$ssh_status .= "disabledfrontendunreachable:" . $node_frontend['server'];
+
+					// At least one SSH connection problem is pending
+					$ssh_all_ok = false;
+				
+				} else {
+				
+					if ( !isset($ssh_outage[$node_frontend['server']]) ) {
+						$ssh_outage[$node_frontend['server']]['outage'] = false;
+						$ssh_outage[$node_frontend['server']]['outage_starttime'] = time();
+					}
+				
+					// Remove SSHUNAVAILABLE flag if SSH was recovered
+					if ( file_exists($ssh_unavailable_flag) ) {
+						$err = unlink($ssh_unavailable_flag);
+						if ( $err === false ) {
+							$debug->log($jconf['log_dir'], $myjobid . ".log", "[ERROR] Cannot remove SSH unavailable flag file at " . $ssh_unavailable_flag . ". Will prevent jobs from download/upload. CHECK!", $sendmail = false);
+						} else {
+							$outage_time = time() - $ssh_outage[$node_frontend['server']]['outage_starttime'];
+							$msg .= "[OK] Front-end " . $node_frontend['server'] . " is back after " . seconds2DaysHoursMinsSecs($outage_time) . "\n\n";
+						}
+					}
+
+					// Reinit flags
+					$ssh_outage[$node_frontend['server']]['outage'] = false;
+					$ssh_outage[$node_frontend['server']]['outage_starttime'] = 0;
+				
+				}
+										
+				// Status changed back to OK
+				if ( ( $ssh_all_ok ) and ( $node_info['statusnetwork'] != "ok" ) ) {
+					updateInfrastructureNodeStatus($node_info['id'], "statusnetwork", "ok");
+				} else {
+					updateInfrastructureNodeStatus($node_info['id'], "statusnetwork", $ssh_status);
+				}
+			}
             
-            if ( !empty($msg) ) {
-                $system_health_log .= "SSH frontend ping results:\n" . $msg . "\n";
-            }
-        }
-    }
+			if ( !empty($msg) ) {
+				$system_health_log .= "SSH frontend ping results:\n" . $msg . "\n";
+			}
+		}
+	}
     
     // Send error summary (prevent repetition with md5 checksums)
     if ( !empty($system_health_log) ) {
@@ -488,7 +481,6 @@ while( !is_file( $app->config['datapath'] . 'jobs/' . $myjobid . '.stop' ) and !
     foreach ($mail_hash as $idx => $value) {
         if ( ( time() - $mail_hash[$idx]['sentmail_date'] ) > $config['report_resend_timeout'] ) {
             unset($mail_hash[$idx]);
-            echo "idx: " . $idx . " cleaned up!\n";
         }
     }
     
@@ -503,6 +495,8 @@ while( !is_file( $app->config['datapath'] . 'jobs/' . $myjobid . '.stop' ) and !
 exit;
 
 function checkDiskSpace($dir) {
+
+	if ( empty($dir) ) return false;
 
     if ( !file_exists($dir) ) return false;
 
@@ -571,14 +565,14 @@ global $db, $myjobid, $debug, $jconf;
         LIMIT 1";
 
 	try {
-		$in = $db->Execute($query);
+		$in = $db->getArray($query);
 	} catch (exception $err) {
 		$debug->log($jconf['log_dir'], $myjobid . ".log", "[ERROR] SQL query failed." . trim($query), $sendmail = true);
 		return false;
 	}
 
     // Check if any record returned
-	if ( $in->RecordCount() < 1 ) return false;
+	if ( count($in) < 1 ) return false;
         
     return $in;
 }
