@@ -30,496 +30,584 @@ $debug->log($jconf['log_dir'], $myjobid . ".log", "*************************** J
 
 // Check operating system - exit if Windows
 if ( iswindows() ) {
-	echo "ERROR: Non-Windows process started on Windows platform\n";
-	exit;
+  echo "ERROR: Non-Windows process started on Windows platform\n";
+  exit;
 }
 
 // Start an infinite loop - exit if any STOP file appears
 while( !is_file( $app->config['datapath'] . 'jobs/job_upload_finalize.stop' ) and !is_file( $app->config['datapath'] . 'jobs/all.stop' ) ) {
 
-	clearstatcache();
-    
-    // Check job file modification - if more fresh version is available, then restart
-    if ( filemtime($myjobpath) > $thisjobstarted ) {
-        $debug->log($jconf['log_dir'], $myjobid . ".log", "[INFO] Seems like an updated version is available of me. Exiting...", $sendmail = false);
-        exit;
-    }
+  clearstatcache();
 
-	while ( 1 ) {
+  // Check job file modification - if more fresh version is available, then restart
+  if ( filemtime($myjobpath) > $thisjobstarted ) {
+    $debug->log($jconf['log_dir'], $myjobid . ".log", "[INFO] Seems like an updated version is available of me. Exiting...", $sendmail = false);
+    exit;
+  }
+  
+  $sleep_length = $app->config['sleep_short'];
 
-		$app->watchdog();
+  while ( 1 ) {
 
-		$sleep_length = $app->config['sleep_short'];
+    $app->watchdog();
 
-		// Initialize log total duration timer
-		$start_time = time();
+    // Initialize log total duration timer
+    $start_time = time();
 
-		// Attached documents: query pending uploads
-		$docs = getUploadedAttachments();
-		if ( $docs !== false ) {
+    // Attached documents: query pending uploads
+    $docs = getUploadedAttachments();
+    if ( $docs !== false ) {
 
-			while ( !$docs->EOF ) {
+      while ( !$docs->EOF ) {
 
-				$doc = $docs->fields;
+        $doc = $docs->fields;
 
-				// Uploaded document
-				$uploadpath = $app->config['uploadpath'] . "attachments/";
-				$base_filename = $doc['id'] . "." . $doc['masterextension'];
-				$fname = $uploadpath . $base_filename;
-				$doc['path_source'] = $fname;
+        // Uploaded document
+        $uploadpath = $app->config['uploadpath'] . "attachments/";
+        $base_filename = $doc['id'] . "." . $doc['masterextension'];
+        $fname = $uploadpath . $base_filename;
+        $doc['path_source'] = $fname;
 
-				// Target file
-				$targetpath = $app->config['recordingpath'] . ( $doc['recordingid'] % 1000 ) . "/" . $doc['recordingid'] . "/attachments/";
-				$fname_target = $targetpath . $base_filename;
-				$doc['path_target'] = $fname_target;
+        // Target file
+        $targetpath = $app->config['recordingpath'] . ( $doc['recordingid'] % 1000 ) . "/" . $doc['recordingid'] . "/attachments/";
+        $fname_target = $targetpath . $base_filename;
+        $doc['path_target'] = $fname_target;
 
-				// Log file path information
-				$debug->log($jconf['log_dir'], $myjobid . ".log", "[INFO] Finalzing attached document. Info: attacheddocumentid = " . $doc['id'] . ", recordingid = " . $doc['recordingid'] . ", username = " . $doc['email'] . ", domain = " . $doc['domain'] . ".", $sendmail = false);
+        // Log file path information
+        $debug->log($jconf['log_dir'], $myjobid . ".log", "[INFO] Finalzing attached document. Info: attacheddocumentid = " . $doc['id'] . ", recordingid = " . $doc['recordingid'] . ", username = " . $doc['email'] . ", domain = " . $doc['domain'] . ".", $sendmail = false);
 
-				updateAttachedDocumentStatus($doc['id'], $jconf['dbstatus_copyfromfe']);
+        updateAttachedDocumentStatus($doc['id'], $jconf['dbstatus_copyfromfe']);
 
-				// Move file to storage
-				$err = move_uploaded_file_to_storage($fname, $fname_target, false);
-				if ( !$err ) {
-					updateAttachedDocumentStatus($doc['id'], $jconf['dbstatus_copyfromfe_err']);
-					$debug->log($jconf['log_dir'], $myjobid . ".log", "[ERROR] Attached document id = " . $doc['id'] . " cannot be moved to storage.\nCOMMAND: " . $err['command'] . "\nRESULT: " . $err['result'], $sendmail = true);
-				} else {
-					$debug->log($jconf['log_dir'], $myjobid . ".log", "[OK] Document moved in " . $err['duration'] . " seconds. " . $doc['path_source'] . " -> " . $doc['path_target'], $sendmail = false);
+        // Move file to storage
+        $err = move_uploaded_file_to_storage($fname, $fname_target, false);
+        if ( !$err ) {
+          updateAttachedDocumentStatus($doc['id'], $jconf['dbstatus_copyfromfe_err']);
+          $debug->log($jconf['log_dir'], $myjobid . ".log", "[ERROR] Attached document id = " . $doc['id'] . " cannot be moved to storage.\nCOMMAND: " . $err['command'] . "\nRESULT: " . $err['result'], $sendmail = true);
+        } else {
+          $debug->log($jconf['log_dir'], $myjobid . ".log", "[OK] Document moved in " . $err['duration'] . " seconds. " . $doc['path_source'] . " -> " . $doc['path_target'], $sendmail = false);
 
-					updateAttachedDocumentStatus($doc['id'], $jconf['dbstatus_copystorage_ok']);
+          updateAttachedDocumentStatus($doc['id'], $jconf['dbstatus_copystorage_ok']);
 
-					// Update recording size
-                    $master_filesize = 0;
-                    $recording_filesize = 0;
-                    
-					$recording_directory = $app->config['recordingpath'] . ( $doc['recordingid'] % 1000 ) . "/" . $doc['recordingid'] . "/";
-                    
-					// Master size
-                    $err = directory_size($recording_directory . "master/");
-                    if ( !$err['code'] ) {
-                        $debug->log($jconf['log_dir'], $myjobid ."log", "Directory_size() failed. Message:\n". $err['command_output'], 0);
-                    } else {
-                        $master_filesize = intval($err['value']);
-                    }
-                    
-                    // Recording size
-					$err = directory_size($recording_directory);
-                    if ( !$err['code'] ) {
-                        $debug->log($jconf['log_dir'], $myjobid ."log", "Directory_size() failed. Message:\n". $err['command_output'], 0);
-                    } else {
-                        $recording_filesize = intval($err['value']);
-                    }
-                    
-					// Update DB
-					$update = array(
-                        'masterdatasize'    => $master_filesize,
-                        'recordingdatasize' => $recording_filesize
-					);
+          // Update recording size
+          $master_filesize = 0;
+          $recording_filesize = 0;
 
-					$recDoc = $app->bootstrap->getModel('recordings');
-					$recDoc->select($doc['recordingid']);
-					$recDoc->updateRow($update);
-				}
+          $recording_directory = $app->config['recordingpath'] . ( $doc['recordingid'] % 1000 ) . "/" . $doc['recordingid'] . "/";
 
-				$app->watchdog();
-				$docs->MoveNext();
-			}
+          // Master size
+          $err = directory_size($recording_directory . "master/");
+          if ( !$err['code'] ) {
+            $debug->log($jconf['log_dir'], $myjobid ."log", "Directory_size() failed. Message:\n". $err['command_output'], 0);
+          } else {
+            $master_filesize = intval($err['value']);
+          }
 
-			$duration = time() - $start_time;
-			$hms = secs2hms($duration);
-			$debug->log($jconf['log_dir'], $myjobid . ".log", "Document finalize finished in " . $hms . " time.", $sendmail = false);
+          // Recording size
+          $err = directory_size($recording_directory);
+          if ( !$err['code'] ) {
+            $debug->log($jconf['log_dir'], $myjobid ."log", "Directory_size() failed. Message:\n". $err['command_output'], 0);
+          } else {
+            $recording_filesize = intval($err['value']);
+          }
 
-		} // End of attached document finalize
+          // Update DB
+          $update = array(
+            'masterdatasize'    => $master_filesize,
+            'recordingdatasize' => $recording_filesize
+          );
 
-		// User avatars: handle uploaded avatars
-		$start_time = time();
-		$avatars = getUploadedAvatars();
-		if ( $avatars !== false ) {
-
-			while ( !$avatars->EOF ) {
-
-				$avatar = $avatars->fields;
-
-				// Uploaded document
-				$uploadpath = $app->config['useravatarpath'];
-				$extension = \Springboard\Filesystem::getExtension( $avatar['avatarfilename'] );
-				$base_filename = $avatar['userid'] . "." . $extension;
-				$fname = $uploadpath . $base_filename;
-				$avatar['path_source'] = $fname;
-
-				// Target file
-				$targetpath = $app->config['mediapath'] . "users/" . ( $avatar['userid'] % 1000 ) . "/" . $avatar['userid'] . "/avatar/";
-				$fname_target = $targetpath . $base_filename;
-				$avatar['path_target'] = $fname_target;
-
-				// Log file path information
-				$debug->log($jconf['log_dir'], $myjobid . ".log", "[INFO] Finalzing avatar. Info: userid = " . $avatar['userid'] . ", username = " . $avatar['email'] . ", domain = " . $avatar['domain'] . ".", $sendmail = false);
-
-				// Status = copying
-				updateAvatarStatus($avatar['userid'], $jconf['dbstatus_copyfromfe']);
-
-				// Move file to storage
-				$err = move_uploaded_file_to_storage($avatar['path_source'], $avatar['path_target'], true);
-				if ( !$err ) {
-					// Status = error
-					updateAvatarStatus($avatar['userid'], $jconf['dbstatus_copyfromfe_err']);
-					$debug->log($jconf['log_dir'], $myjobid . ".log", "[ERROR] Avatar for uid = " . $avatar['userid'] . " cannot be moved to storage.\nCOMMAND: " . $err['command'] . "\nRESULT: " . $err['result'], $sendmail = true);
-				} else {
-					// Status = OK
-					updateAvatarStatus($avatar['userid'], $jconf['dbstatus_copystorage_ok']);
-					try {
-						\Springboard\Image::resizeAndCropImage($avatar['path_target'], 36, 36, 'middle');
-					} catch (exception $err) {
-						$debug->log($jconf['log_dir'], $myjobid . ".log", "[ERROR] Avatar for uid = " . $avatar['userid'] . " cannot be resized (/Springboard/Image::resizeAndCropImage).", $sendmail = true);
-					}
-
-					$debug->log($jconf['log_dir'], $myjobid . ".log", "[OK] Avatar moved and resized in " . $err['duration'] . " seconds. " . $avatar['path_source'] . " -> " . $avatar['path_target'], $sendmail = false);
-				}
-
-				$app->watchdog();
-				$avatars->MoveNext();
-			}
-
-			$duration = time() - $start_time;
-			$hms = secs2hms($duration);
-			$debug->log($jconf['log_dir'], $myjobid . ".log", "Avatar finalize finished in " . $hms . " time.", $sendmail = false);
-
-		} // End of avatar finalize
-
-		// Contributor images: handle selected video index pictures
-		$cimages = getSelectedContributorImages();
-		if ( $cimages !== false ) {
-
-			while ( !$cimages->EOF ) {
-
-				$cimage = $cimages->fields;
-
-				// Source and destination file
-				$source_file = $app->config['mediapath'] . $cimage['indexphotofilename'];
-				$contributor_path = "contributors/" . ( $cimage['contributorid'] % 1000 ) . "/" . $cimage['contributorid'] . "/";
-				$destination_path = $app->config['mediapath'] . $contributor_path;
-				$destination_file = $destination_path . $cimage['id'] . ".jpg";
-
-				// Log file path information
-				$debug->log($jconf['log_dir'], $myjobid . ".log", "[INFO] Copying contributor index image. Info: contributorid = " . $cimage['contributorid'] . ".", $sendmail = false);
-
-				// Source file: check
-				if ( !file_exists($source_file) ) {
-					$debug->log($jconf['log_dir'], $myjobid . ".log", "[ERROR] Contributor index image not found at " . $source_file, $sendmail = true);
-					$cimages->MoveNext();
-					continue;
-				}
-
-				// Create destination directory under "contributors"
-				$err = create_directory($destination_path);
-				if ( !$err['code'] ) {
-					$debug->log($jconf['log_dir'], $myjobid . ".log", "[ERROR] Cannot create directory " . $destination_path, $sendmail = true);
-					$cimages->MoveNext();
-					continue;
-				}
-
-				// Copy file to destination
-				$err = copy($source_file, $destination_file);
-				if ( !$err ) {
-					$debug->log($jconf['log_dir'], $myjobid . ".log", "[ERROR] Cannot copy " . $source_file . " -> " . $destination_file, $sendmail = true);
-					$cimages->MoveNext();
-					continue;
-				}
-
-				// Update new path in DB
-				$update = array(
-					'indexphotofilename'    => $contributor_path . $cimage['id'] . ".jpg"
-				);
-				$cImg = $app->bootstrap->getModel('contributor_images');
-				$cImg->select($cimage['id']);
-				$cImg->updateRow($update);
-
-				$debug->log($jconf['log_dir'], $myjobid . ".log", "[OK] Image copied " . $source_file . " -> " . $destination_file, $sendmail = false);
-
-				$app->watchdog();
-				$cimages->MoveNext();
-			}
-
-		} // End of contributor images finalize
-
-		break;
-	} // End of while(1)
-
-	// Recordings: finalize masters
-    $recordings = getRecordingMastersToFinalize();
-    if ( $recordings !== false ) {
-
-        while ( !$recordings->EOF ) {
-            $recording = $recordings->fields;
-
-            $destination_path = $app->config['recordingpath'] . ( $recording['id'] % 1000 ) . "/" . $recording['id'] . "/master/";
-            $recording_path = $app->config['recordingpath'] . ( $recording['id'] % 1000 ) . "/" . $recording['id'] . "/";
-
-            $debug->log($jconf['log_dir'], $myjobid . ".log", "Recording finalization for id = " . $recording['id'] . " started.", $sendmail = false);
-
-            $err = create_directory($destination_path);
-            if ( !$err['code'] ) {
-                $debug->log($jconf['log_dir'], $myjobid . ".log", "[ERROR] Cannot create directory " . $destination_path, $sendmail = true);
-                $recordings->MoveNext();
-                continue;
-            }
-
-            // Recording: finalize
-            if ($recording['masterstatus'] == $jconf['dbstatus_uploaded']) { $err = moveMediaFileToStorage($recording, "recording"); }
-            // Content: finalize
-            if ($recording['contentmasterstatus'] == $jconf['dbstatus_uploaded']) { $err = moveMediaFileToStorage($recording, "content"); }
-            
-            // Update recording and master data size
-            $master_filesize = 0;
-            $recording_filesize = 0;
-            
-            unset($err);
-            $err = directory_size($destination_path);
-            if ( !$err['code'] ) {
-                $debug->log($jconf['log_dir'], $myjobid ."log", "Directory_size() failed. Message:\n". $err['command_output'], 0);
-            } else {
-                $master_filesize = intval($err['value']);
-            }
-
-            unset($err);
-            $err = directory_size($recording_path);
-            if ( !$err['code'] ) {
-                $debug->log($jconf['log_dir'], $myjobid ."log", "Directory_size() failed. Message:\n". $err['command_output'], 0);
-            } else {
-                $recording_filesize = intval($err['value']);
-            }
-
-            $update = array(
-                'masterdatasize' => $master_filesize,
-                'recordingdatasize' => $recording_filesize
-            );
-            
-            $recDoc = $app->bootstrap->getModel('recordings');
-            $recDoc->select($recording['id']);
-            $recDoc->updateRow($update);
-            $debug->log($jconf['log_dir'], $myjobid .".log", "[INFO] Master and recording data size updated. Values: " . print_r($update, true), false);
-            unset($err, $recDoc, $update);
-
-            $app->watchdog();
-            $recordings->MoveNext();
+          $recDoc = $app->bootstrap->getModel('recordings');
+          $recDoc->select($doc['recordingid']);
+          $recDoc->updateRow($update);
         }
 
+        $app->watchdog();
+        $docs->MoveNext();
+      }
+
+      $duration = time() - $start_time;
+      $hms = secs2hms($duration);
+      $debug->log($jconf['log_dir'], $myjobid . ".log", "Document finalize finished in " . $hms . " time.", $sendmail = false);
+
+    } // End of attached document finalize
+
+    // User avatars: handle uploaded avatars
+    $start_time = time();
+    $avatars = getUploadedAvatars();
+    if ( $avatars !== false ) {
+
+      while ( !$avatars->EOF ) {
+
+        $avatar = $avatars->fields;
+
+        // Uploaded document
+        $uploadpath = $app->config['useravatarpath'];
+        $extension = \Springboard\Filesystem::getExtension( $avatar['avatarfilename'] );
+        $base_filename = $avatar['userid'] . "." . $extension;
+        $fname = $uploadpath . $base_filename;
+        $avatar['path_source'] = $fname;
+
+        // Target file
+        $targetpath = $app->config['mediapath'] . "users/" . ( $avatar['userid'] % 1000 ) . "/" . $avatar['userid'] . "/avatar/";
+        $fname_target = $targetpath . $base_filename;
+        $avatar['path_target'] = $fname_target;
+
+        // Log file path information
+        $debug->log($jconf['log_dir'], $myjobid . ".log", "[INFO] Finalzing avatar. Info: userid = " . $avatar['userid'] . ", username = " . $avatar['email'] . ", domain = " . $avatar['domain'] . ".", $sendmail = false);
+
+        // Status = copying
+        updateAvatarStatus($avatar['userid'], $jconf['dbstatus_copyfromfe']);
+
+        // Move file to storage
+        $err = move_uploaded_file_to_storage($avatar['path_source'], $avatar['path_target'], true);
+        if ( !$err ) {
+          // Status = error
+          updateAvatarStatus($avatar['userid'], $jconf['dbstatus_copyfromfe_err']);
+          $debug->log($jconf['log_dir'], $myjobid . ".log", "[ERROR] Avatar for uid = " . $avatar['userid'] . " cannot be moved to storage.\nCOMMAND: " . $err['command'] . "\nRESULT: " . $err['result'], $sendmail = true);
+        } else {
+          // Status = OK
+          updateAvatarStatus($avatar['userid'], $jconf['dbstatus_copystorage_ok']);
+          try {
+            \Springboard\Image::resizeAndCropImage($avatar['path_target'], 36, 36, 'middle');
+          } catch (exception $err) {
+            $debug->log($jconf['log_dir'], $myjobid . ".log", "[ERROR] Avatar for uid = " . $avatar['userid'] . " cannot be resized (/Springboard/Image::resizeAndCropImage).", $sendmail = true);
+          }
+
+          $debug->log($jconf['log_dir'], $myjobid . ".log", "[OK] Avatar moved and resized in " . $err['duration'] . " seconds. " . $avatar['path_source'] . " -> " . $avatar['path_target'], $sendmail = false);
+        }
+
+        $app->watchdog();
+        $avatars->MoveNext();
+      }
+
+      $duration = time() - $start_time;
+      $hms = secs2hms($duration);
+      $debug->log($jconf['log_dir'], $myjobid . ".log", "Avatar finalize finished in " . $hms . " time.", $sendmail = false);
+
+    } // End of avatar finalize
+
+    // Contributor images: handle selected video index pictures
+    $cimages = getSelectedContributorImages();
+    if ( $cimages !== false ) {
+
+      while ( !$cimages->EOF ) {
+
+        $cimage = $cimages->fields;
+
+        // Source and destination file
+        $source_file = $app->config['mediapath'] . $cimage['indexphotofilename'];
+        $contributor_path = "contributors/" . ( $cimage['contributorid'] % 1000 ) . "/" . $cimage['contributorid'] . "/";
+        $destination_path = $app->config['mediapath'] . $contributor_path;
+        $destination_file = $destination_path . $cimage['id'] . ".jpg";
+
+        // Log file path information
+        $debug->log($jconf['log_dir'], $myjobid . ".log", "[INFO] Copying contributor index image. Info: contributorid = " . $cimage['contributorid'] . ".", $sendmail = false);
+
+        // Source file: check
+        if ( !file_exists($source_file) ) {
+          $debug->log($jconf['log_dir'], $myjobid . ".log", "[ERROR] Contributor index image not found at " . $source_file, $sendmail = true);
+          $cimages->MoveNext();
+          continue;
+        }
+
+        // Create destination directory under "contributors"
+        $err = create_directory($destination_path);
+        if ( !$err['code'] ) {
+          $debug->log($jconf['log_dir'], $myjobid . ".log", "[ERROR] Cannot create directory " . $destination_path, $sendmail = true);
+          $cimages->MoveNext();
+          continue;
+        }
+
+        // Copy file to destination
+        $err = copy($source_file, $destination_file);
+        if ( !$err ) {
+          $debug->log($jconf['log_dir'], $myjobid . ".log", "[ERROR] Cannot copy " . $source_file . " -> " . $destination_file, $sendmail = true);
+          $cimages->MoveNext();
+          continue;
+        }
+
+        // Update new path in DB
+        $update = array(
+          'indexphotofilename' => "{$contributor_path}{$cimage['id']}.jpg"
+        );
+        $cImg = $app->bootstrap->getModel('contributor_images');
+        $cImg->select($cimage['id']);
+        $cImg->updateRow($update);
+
+        $debug->log($jconf['log_dir'], $myjobid . ".log", "[OK] Image copied " . $source_file . " -> " . $destination_file, $sendmail = false);
+
+        $app->watchdog();
+        $cimages->MoveNext();
+      }
+
+    } // End of contributor images finalize
+
+    break;
+  } // End of while(1)
+
+  // Recordings: finalize masters
+  $recordings = getRecordingMastersToFinalize();
+  if ( $recordings !== false ) {
+
+    while ( !$recordings->EOF ) {
+      $recording = $recordings->fields;
+      
+      if (getCountOfRecordingsVersionsBeingCopied($recording['id']) > 0) {
+        $debug->log($jconf['log_dir'], $myjobid . ".log", "[INFO] Recording #{$recording['id']} is being copied by the converter. Skipping.", false);
+        $sleep_length = $app->config['sleep_media'];
+        $recordings->MoveNext();
+        continue;
+      }
+
+      $destination_path = $app->config['recordingpath'] . ( $recording['id'] % 1000 ) . "/" . $recording['id'] . "/master/";
+      $recording_path = $app->config['recordingpath'] . ( $recording['id'] % 1000 ) . "/" . $recording['id'] . "/";
+
+      $debug->log($jconf['log_dir'], $myjobid . ".log", "Recording finalization for id = " . $recording['id'] . " started.", $sendmail = false);
+
+      $err = create_directory($destination_path);
+      if ( !$err['code'] ) {
+        $debug->log($jconf['log_dir'], $myjobid . ".log", "[ERROR] Cannot create directory " . $destination_path, $sendmail = true);
+        $recordings->MoveNext();
+        continue;
+      }
+      
+      // Recording: finalize
+      if ($recording['masterstatus'] == $jconf['dbstatus_uploaded']) { $err = moveMediaFileToStorage($recording, "recording"); }
+      // Content: finalize
+      if ($recording['contentmasterstatus'] == $jconf['dbstatus_uploaded']) { $err = moveMediaFileToStorage($recording, "content"); }
+
+      // Update recording and master data size
+      $master_filesize = 0;
+      $recording_filesize = 0;
+
+      unset($err);
+      $err = directory_size($destination_path);
+      if ( !$err['code'] ) {
+        $debug->log($jconf['log_dir'], $myjobid ."log", "Directory_size() failed. Message:\n". $err['command_output'], 0);
+      } else {
+        $master_filesize = intval($err['value']);
+      }
+
+      unset($err);
+      $err = directory_size($recording_path);
+      if ( !$err['code'] ) {
+        $debug->log($jconf['log_dir'], $myjobid ."log", "Directory_size() failed. Message:\n". $err['command_output'], 0);
+      } else {
+        $recording_filesize = intval($err['value']);
+      }
+
+      $update = array(
+        'masterdatasize' => $master_filesize,
+        'recordingdatasize' => $recording_filesize
+      );
+
+      $recDoc = $app->bootstrap->getModel('recordings');
+      $recDoc->select($recording['id']);
+      $recDoc->updateRow($update);
+      $debug->log($jconf['log_dir'], $myjobid .".log", "[INFO] Master and recording data size updated. Values: " . print_r($update, true), false);
+      unset($err, $recDoc, $update);
+
+      $app->watchdog();
+      $recordings->MoveNext();
     }
 
-	// Watchdog
-	$app->watchdog();
+  }
 
-	sleep($sleep_length);
+  // Watchdog
+  $app->watchdog();
+
+  sleep($sleep_length);
 
 }   // End of outer while
 
 exit;
 
+//-----------------------------------------------
+
+/**
+ * moveMediaFileToStorage
+ * 
+ * @global Springboard\Application\Cli $app
+ * @global Spingboard\Debug $debug
+ * @global string $myjobid
+ * @global array $jconf
+ * 
+ * @param array $recording
+ * @param string $type
+ * @return boolean
+ */
 function moveMediaFileToStorage($recording, $type = "recording") {
 global $app, $debug, $myjobid, $jconf;
 
-	if ( ( $type != "recording" ) and ( $type != "content" ) ) return false;
+  if ( $type != "recording" && $type != "content" ) { return false; }
 
-	$idx = "";
-	$suffix = "video";
-	if ( $recording[$idx . 'mastermediatype'] == "audio" ) $suffix = "audio";
-	if ( $type == "content" ) $idx = $suffix = "content";
+  $idx = "";
+  $suffix = "video";
+  if ( $recording[$idx . 'mastermediatype'] == "audio" ) $suffix = "audio";
+  if ( $type == "content" ) $idx = $suffix = "content";
+  
+  updateMasterRecordingStatus($recording['id'], $jconf['dbstatus_copystorage'], $type);
 
-	$destination_path = $app->config['recordingpath'] . ( $recording['id'] % 1000 ) . "/" . $recording['id'] . "/master/";
+  $destination_path = $app->config['recordingpath'] . ( $recording['id'] % 1000 ) . "/" . $recording['id'] . "/master/";
+  $source_filename = $app->config['uploadpath'] . "recordings/" . $recording['id'] . "_" . $suffix . "." . $recording[$idx . 'mastervideoextension'];
+  $destination_filename = $destination_path . $recording['id'] . "_" . $suffix . "." . $recording[$idx . 'mastervideoextension'];
 
-	$source_filename = $app->config['uploadpath'] . "recordings/" . $recording['id'] . "_" . $suffix . "." . $recording[$idx . 'mastervideoextension'];
-	$destination_filename = $destination_path . $recording['id'] . "_" . $suffix . "." . $recording[$idx . 'mastervideoextension'];
-
-	// Copy media file
-	$start_time = time();
-	if ( !copy($source_filename, $destination_filename) ) {
-		$debug->log($jconf['log_dir'], $myjobid . ".log", "[ERROR] Cannot copy file " . $source_filename . " -> " . $destination_filename . ". CHECK!", $sendmail = true);
-		updateMasterRecordingStatus($recording['id'], $jconf['dbstatus_copystorage_err'], $type);
-		return false;
-	} else {
-		$duration = time() - $start_time;
-		$hms = secs2hms($duration);
-		$debug->log($jconf['log_dir'], $myjobid . ".log", "[OK] Copy " . $source_filename . " -> " . $destination_filename . " finished in " . $hms . " time", $sendmail = false);
-		updateMasterRecordingStatus($recording['id'], $jconf['dbstatus_copystorage_ok'], $type);
-
-		// Chmod/chown master file
+  // Copy media file
+  $start_time = time();
+  if ( !copy($source_filename, $destination_filename) ) {
+    $debug->log($jconf['log_dir'], $myjobid . ".log", "[ERROR] Cannot copy file " . $source_filename . " -> " . $destination_filename . ". CHECK!", $sendmail = true);
+    updateMasterRecordingStatus($recording['id'], $jconf['dbstatus_copystorage_err'], $type);
+    return false;
+  } else {
+    $duration = time() - $start_time;
+    $hms = secs2hms($duration);
+    $debug->log($jconf['log_dir'], $myjobid . ".log", "[OK] Copy " . $source_filename . " -> " . $destination_filename . " finished in " . $hms . " time", $sendmail = false);
+    updateMasterRecordingStatus($recording['id'], $jconf['dbstatus_copystorage_ok'], $type);
+    
+    // Chmod/chown master file
 		$command  = "chmod -f -R " . $jconf['file_access'] . " " . $destination_filename . " 2>&1";
 		$command .= " ; chown -f -R " . $jconf['file_owner'] . " " . $destination_filename . " 2>&1";
-		exec($command, $output, $result);
-		$output_string = implode("\n", $output);
-		if ( $result != 0 ) {
-			$debug->log($jconf['log_dir'], $myjobid . ".log", "[WARN] Cannot stat file " . $destination_filename, $sendmail = true);
-		}
+    exec($command, $output, $result);
+    $output_string = implode("\n", $output);
+    if ( $result != 0 ) {
+      $debug->log($jconf['log_dir'], $myjobid . ".log", "[WARN] Cannot stat file " . $destination_filename, $sendmail = true);
+    }
 
-		// Remove master from upload area
-		if ( !unlink($source_filename) ) {
-			$debug->log($jconf['log_dir'], $myjobid . ".log", "[ERROR] Cannot remove file " . $source_filename . ". File won't be removed. Please CHECK error and REMOVE file from upload area!", $sendmail = true);
-			return false;
-		} else {
-			$debug->log($jconf['log_dir'], $myjobid . ".log", "[OK] File " . $source_filename . " removed.", $sendmail = false);
-		}
+    // Remove master from upload area
+    if ( !unlink($source_filename) ) {
+      $debug->log($jconf['log_dir'], $myjobid . ".log", "[ERROR] Cannot remove file " . $source_filename . ". File won't be removed. Please CHECK error and REMOVE file from upload area!", $sendmail = true);
+      return false;
+    } else {
+      $debug->log($jconf['log_dir'], $myjobid . ".log", "[OK] File " . $source_filename . " removed.", $sendmail = false);
+    }
 
-	}
+  }
 
-	return true;
+  return true;
 }
 
-// *************************************************************************
-// *                        function query_docnew()                        *
-// *************************************************************************
-// Description: queries next uploaded document from attached_documents
+/**
+ * Queries next uploaded document from attached_documents
+ * 
+ * @global array $jconf
+ * @global Springboard\Application\Cli $app
+ * @global Spingboard\Debug $debug
+ * @global string $myjobid
+ * 
+ * @return boolean
+ */
 function getUploadedAttachments() {
 global $jconf, $app, $debug, $myjobid;
 
-    $model = $app->bootstrap->getModel('attached_documents');
+  $model = $app->bootstrap->getModel('attached_documents');
+  $node  = $app->config['node_sourceip'];
 
-	$node = $app->config['node_sourceip'];
+  $query = "
+    SELECT
+      a.id,
+      a.recordingid,
+      a.userid,
+      a.title,
+      a.masterfilename,
+      a.masterextension,
+      a.status,
+      a.sourceip,
+      b.email,
+      c.id as organizationid,
+      c.domain
+    FROM
+      attached_documents as a,
+      users as b,
+      organizations as c
+    WHERE
+      status = '" . $jconf['dbstatus_uploaded'] . "' AND
+      a.sourceip = '" . $node . "' AND
+      a.userid = b.id AND
+      b.organizationid = c.id";
 
-	$query = "
-		SELECT
-			a.id,
-			a.recordingid,
-			a.userid,
-			a.title,
-			a.masterfilename,
-			a.masterextension,
-			a.status,
-			a.sourceip,
-			b.email,
-			c.id as organizationid,
-			c.domain
-		FROM
-			attached_documents as a,
-			users as b,
-			organizations as c
-		WHERE
-			status = '" . $jconf['dbstatus_uploaded'] . "' AND
-			a.sourceip = '" . $node . "' AND
-			a.userid = b.id AND
-			b.organizationid = c.id";
+  try {
+    $rs = $model->safeExecute($query);
+  } catch (exception $err) {
+    $debug->log($jconf['log_dir'], $myjobid . ".log", "[ERROR] SQL query failed.\n" . trim($query), $sendmail = true);
+    return false;
+  }
 
-	try {
-        $rs = $model->safeExecute($query);
-	} catch (exception $err) {
-		$debug->log($jconf['log_dir'], $myjobid . ".log", "[ERROR] SQL query failed.\n" . trim($query), $sendmail = true);
-		return false;
-	}
+  // Check if pending job exsits
+  if ( $rs->RecordCount() < 1 ) return false;
 
-	// Check if pending job exsits
-	if ( $rs->RecordCount() < 1 ) return false;
-
-	return $rs;
+  return $rs;
 }
 
-// *************************************************************************
-// *                    function query_user_avatars()                      *
-// *************************************************************************
-// Description: queries pending user avatars
+/**
+ * Queries pending user avatars
+ * 
+ * @global array $jconf
+ * @global Spingboard\Debug $debug
+ * @global Springboard\Application\Cli $app
+ * @global string $myjobid
+ * 
+ * @return boolean
+ */
 function getUploadedAvatars() {
 global $jconf, $app, $debug, $myjobid;
 
     $model = $app->bootstrap->getModel('users');
     
-	$node = $app->config['node_sourceip'];
+  $node = $app->config['node_sourceip'];
 
-	$query = "
-		SELECT
-			a.id as userid,
-			a.nickname,
-			a.email,
-			a.avatarfilename,
-			a.avatarstatus,
-			a.organizationid,
-			a.avatarsourceip,
-			b.domain
-		FROM
-			users as a,
-			organizations as b
-		WHERE
-			a.avatarstatus = '" . $jconf['dbstatus_uploaded'] . "' AND
-			a.avatarsourceip = '" . $node . "' AND
-			a.organizationid = b.id";
+  $query = "
+    SELECT
+      a.id as userid,
+      a.nickname,
+      a.email,
+      a.avatarfilename,
+      a.avatarstatus,
+      a.organizationid,
+      a.avatarsourceip,
+      b.domain
+    FROM
+      users as a,
+      organizations as b
+    WHERE
+      a.avatarstatus = '" . $jconf['dbstatus_uploaded'] . "' AND
+      a.avatarsourceip = '" . $node . "' AND
+      a.organizationid = b.id";
 
-	try {
+  try {
         $rs = $model->safeExecute($query);
-	} catch (exception $err) {
-		$debug->log($jconf['log_dir'], $myjobid . ".log", "[ERROR] SQL query failed.\n" . trim($query), $sendmail = true);
-		return false;
-	}
+  } catch (exception $err) {
+    $debug->log($jconf['log_dir'], $myjobid . ".log", "[ERROR] SQL query failed.\n" . trim($query), $sendmail = true);
+    return false;
+  }
 
-	// Check if pending job exsits
-	if ( $rs->RecordCount() < 1 ) return false;
+  // Check if pending job exsits
+  if ( $rs->RecordCount() < 1 ) return false;
 
-	return $rs;
+  return $rs;
 }
 
+/**
+ * getSelectedContributorImages
+ * 
+ * @global array $jconf
+ * @global Spingboard\Debug $debug
+ * @global Springboard\Application\Cli $app
+ * @global string $myjobid
+ * 
+ * @return boolean
+ */
 function getSelectedContributorImages() {
 global $jconf, $app, $debug, $myjobid;
 
     $model = $app->bootstrap->getModel('contributor_images');
 
-	$query = "
-		SELECT
-			id,
-			contributorid,
-			indexphotofilename
-		FROM
-			contributor_images
-		WHERE
-			indexphotofilename LIKE '%recordings%'";
+  $query = "
+    SELECT
+      id,
+      contributorid,
+      indexphotofilename
+    FROM
+      contributor_images
+    WHERE
+      indexphotofilename LIKE '%recordings%'";
 
-	try {
+  try {
         $rs = $model->safeExecute($query);
-	} catch (exception $err) {
-		$debug->log($jconf['log_dir'], $myjobid . ".log", "[ERROR] SQL query failed.\n" . trim($query), $sendmail = true);
-		return false;
-	}
+  } catch (exception $err) {
+    $debug->log($jconf['log_dir'], $myjobid . ".log", "[ERROR] SQL query failed.\n" . trim($query), $sendmail = true);
+    return false;
+  }
 
-	// Check if pending job exsits
-	if ( $rs->RecordCount() < 1 ) return false;
+  // Check if pending job exsits
+  if ( $rs->RecordCount() < 1 ) return false;
 
-	return $rs;
+  return $rs;
 }
 
+/**
+ * getRecordingMastersToFinalize
+ * 
+ * @global array $jconf
+ * @global Spingboard\Debug $debug
+ * @global Springboard\Application\Cli $app
+ * @global string $myjobid
+ * 
+ * @return boolean
+ */
 function getRecordingMastersToFinalize() {
 global $jconf, $debug, $app, $myjobid;
 
-    $model = $app->bootstrap->getModel('recordings');
+  $model = $app->bootstrap->getModel('recordings');
 
-	$node = $app->config['node_sourceip'];
+  $node = $app->config['node_sourceip'];
 
-	$query = "
-		SELECT
-			r.id,
-			r.status,
-			r.contentstatus,
-			r.masterstatus,
-			r.contentmasterstatus,
-			r.mastersourceip,
-			r.contentmastersourceip,
-			r.mastervideofilename,
-			r.contentmastervideofilename,
-			r.mastervideoextension,
-			r.contentmastervideoextension,
-			r.mastermediatype,
-			r.contentmastermediatype
-		FROM
-			recordings AS r
-		WHERE
-			( r.mastersourceip = '" . $node . "' AND r.masterstatus = '" . $jconf['dbstatus_uploaded'] . "' AND r.status = '" . $jconf['dbstatus_copystorage_ok'] . "' ) OR
-			( r.contentmastersourceip = '" . $node . "' AND r.contentmasterstatus = '" . $jconf['dbstatus_uploaded'] . "' AND r.contentstatus = '" . $jconf['dbstatus_copystorage_ok'] . "' )
-		ORDER BY
-			r.id";
+  $query = "
+    SELECT
+      r.id,
+      r.status,
+      r.contentstatus,
+      r.masterstatus,
+      r.contentmasterstatus,
+      r.mastersourceip,
+      r.contentmastersourceip,
+      r.mastervideofilename,
+      r.contentmastervideofilename,
+      r.mastervideoextension,
+      r.contentmastervideoextension,
+      r.mastermediatype,
+      r.contentmastermediatype
+    FROM
+      recordings AS r
+    WHERE
+      ( r.mastersourceip = '{$node}' AND r.masterstatus = '{$jconf['dbstatus_uploaded']}' AND r.status = '{$jconf['dbstatus_copystorage_ok']}' ) OR
+      ( r.contentmastersourceip = '{$node}' AND r.contentmasterstatus = '{$jconf['dbstatus_uploaded']}' AND r.contentstatus = '{$jconf['dbstatus_copystorage_ok']}' )
+    ORDER BY
+      r.id";
 
-	try {
-        $rs = $model->safeExecute($query);
-	} catch (exception $err) {
-		$debug->log($jconf['log_dir'], $myjobid . ".log", "[ERROR] SQL query failed.\n" . trim($query), $sendmail = true);
-		return false;
-	}
+  try {
+    $rs = $model->safeExecute($query);
+  } catch (exception $err) {
+    $debug->log($jconf['log_dir'], $myjobid . ".log", "[ERROR] SQL query failed.\n" . trim($query), true);
+    return false;
+  }
 
-	// Check if any record returned
-	if ( $rs->RecordCount() < 1 ) return false;
+  // Check if any record returned
+  if ( $rs->RecordCount() < 1 ) return false;
 
-	return $rs;
+  return $rs;
+}
+
+/**
+ * Returns the number of recordings_versions being copied for a given recordingID.
+ * 
+ * @global array $jconf
+ * @global Springboard\Application\Cli $app
+ * 
+ * @param type $recordingID
+ * @return int
+ * @throws Exception
+ */
+function getCountOfRecordingsVersionsBeingCopied($recordingID) {
+  global $jconf, $app;
+  
+  if (!isset($recordingID)) { return -1; }
+  
+  $count = -1;
+  $rvmodel = $app->bootstrap->getModel('recording_versions');
+  $sql = "SELECT COUNT(*) AS count "
+    . "FROM "
+    . "recordings_versions AS rv "
+    . "WHERE "
+    . "  rv.recordingid = {$recordingID} AND "
+    . "  rv.status LIKE '{$jconf['dbstatus_copyfromfe']}'";
+  
+  try {
+    $rs = $rvmodel->safeExecute($sql);
+    $count = (int) $rs->getArray()[0]['count'];
+  } catch(Exception $e) {
+    $msg = __FUNCTION__ ."() failed to run the following query:\n{$sql}\nMessage:[[{$e->getMessage()}]]";
+    throw new Exception($msg, $e->getCode(), $e);
+  }
+  
+  return $count;
 }
