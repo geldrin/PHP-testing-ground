@@ -208,6 +208,7 @@ abstract class Player {
       'live'  => $this->type === 'live',
       'playlist' => array(),
       'customPlaylist' => true,
+      'smoothSwitching' => true,
       'vsq' => array(
         'debug'            => $this->bootstrap->config['vsqplayer_debug'],
         'type'             => $this->type,

@@ -3370,10 +3370,13 @@ class Recordings extends \Springboard\Model {
 
     // a jelentes nem megy visszafele es a jelentes nem tul regi
     // a timestamp amihez hasonlitunk hogy nem regi azt sose updateljuk
-    if ( $row['position'] < $lastposition and !$row['expired'] ) {
+    // ha egyenlo akkor nem updatelunk adatbazisban, de mint erteket elfogadjuk
+    if ( $row['position'] <= $lastposition and !$row['expired'] ) {
 
       unset( $record['timestamp'] ); // nem updatelhetunk timestampet hogy kideruljon hogy kifutottunk az idobol
-      $progressModel->updateRow( $record );
+      if ( $row['position'] != $lastposition )
+        $progressModel->updateRow( $record );
+
       $ret['success'] = true;
       $row['position'] = $lastposition;
 
@@ -3466,8 +3469,9 @@ class Recordings extends \Springboard\Model {
         WHERE id = '" . $existing['id'] . "'
         LIMIT 1
       ");
-    } elseif ( $existing['expired'] )
+    } elseif ( $existing['expired'] ) {
       return false;
+    }
 
     return true;
   }

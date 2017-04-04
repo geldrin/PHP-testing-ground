@@ -526,7 +526,7 @@ global $app;
 	$err['result'] = 0;
 	$err['size'] = 0;
 
-	$ssh_command = "ssh -i " . $app->config['ssh_key'] . " " . $app->config['ssh_user'] . "@" . $server . " ";
+	$ssh_command = "ssh -q -i " . $app->config['ssh_key'] . " " . $app->config['ssh_user'] . "@" . $server . " ";
 	$remote_filename = $app->config['ssh_user'] . "@" . $server . ":" . $file;
 
 	$filesize = 0;
@@ -573,7 +573,7 @@ function ssh_filemtime($server, $file) {
 	$err['result'] = 0;
 	$err['size'] = 0;
 
-	$ssh_command = "ssh -i " . $app->config['ssh_key'] . " " . $app->config['ssh_user'] . "@" . $server . " ";
+	$ssh_command = "ssh -q -i " . $app->config['ssh_key'] . " " . $app->config['ssh_user'] . "@" . $server . " ";
 	$remote_filename = $app->config['ssh_user'] . "@" . $server . ":" . $file;
 
 	$filesize = 0;
@@ -696,9 +696,9 @@ global $app, $jconf;
 			$err['message'] = "[ERROR] Not enough free space to start conversion (available: " . ceil($available_disk / 1024 / 1024) . "Mb, filesize: " . ceil($filesize / 1024 / 1024) . ")";
 			return $err;
 		}
-		$command = "scp -B -r -i " . $app->config['ssh_key'] . " " . $app->config['ssh_user'] . "@" . $server . ":" . $file_src . " " . $file_dst . " 2>&1";
+		$command = "scp -q -B -r -i " . $app->config['ssh_key'] . " " . $app->config['ssh_user'] . "@" . $server . ":" . $file_src . " " . $file_dst . " 2>&1";
 	} else {
-		$command = "scp -B -r -i " . $app->config['ssh_key'] . " " . $file_src . " " . $app->config['ssh_user'] . "@" . $server . ":" . $file_dst . " 2>&1";
+		$command = "scp -q -B -r -i " . $app->config['ssh_key'] . " " . $file_src . " " . $app->config['ssh_user'] . "@" . $server . ":" . $file_dst . " 2>&1";
 	}
 
 	$time_start = time();
@@ -759,7 +759,7 @@ global $app, $jconf;
 	if ( $isdirectory ) $permissions = $jconf['directory_access'];
 
 	// SSH command template
-	$ssh_command = "ssh -i " . $app->config['ssh_key'] . " " . $app->config['ssh_user'] . "@" . $server . " ";
+	$ssh_command = "ssh -q -i " . $app->config['ssh_key'] . " " . $app->config['ssh_user'] . "@" . $server . " ";
 	// Shell command
 	$chmod_command = "chmod -f -R " . $permissions . " " . $file . " 2>&1 ; chown -f -R " . $jconf['file_owner'] . " " . $file . " 2>&1";
 	$command = $ssh_command . "\"" . $chmod_command . "\"";

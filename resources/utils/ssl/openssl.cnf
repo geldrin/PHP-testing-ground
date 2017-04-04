@@ -1,0 +1,36 @@
+[ req ]
+distinguished_name             = req_distinguished_name
+req_extensions                 = v3_req
+
+[ req_distinguished_name ]
+0.organizationName             = Organization Name (company)
+organizationalUnitName         = Organizational Unit Name (department, division)
+organizationalUnitName_max     = 64
+emailAddress                   = Email Address
+emailAddress_max               = 64
+localityName                   = Locality Name (city, district)
+stateOrProvinceName            = State or Province Name (full name)
+countryName                    = Country Name (2 letter code)
+countryName_min                = 2
+countryName_max                = 2
+commonName                     = Common Name (hostname, IP, or your name)
+commonName_max                 = 64
+
+# CSR specifics in this section
+countryName_default            = HU
+stateOrProvinceName_default    = Budapest
+localityName_default           = Budapest
+0.organizationName_default     = Pallas Athene
+organizationalUnitName_default = Pallas Athene IT
+commonName_default             = pallasvideo.hu
+emailAddress_default           = support@videosqr.com
+
+[ v3_req ]
+basicConstraints = CA:FALSE
+keyUsage = nonRepudiation, digitalSignature, keyEncipherment
+subjectAltName = @alt_names
+
+[alt_names]
+DNS.1 = pallasvideo.hu
+DNS.2 = www.pallasvideo.hu
+DNS.3 = vsq-static.pallasvideo.hu

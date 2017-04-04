@@ -96,7 +96,7 @@ export default class Timeline extends BasePlugin {
     }
   }
 
-  private async handleResume() {
+  private async handleResume(video: FlowVideo) {
     if (this.watched < 10)
       return;
 
@@ -114,6 +114,11 @@ export default class Timeline extends BasePlugin {
     if (shouldResume) {
       // itt nem kell seekelnunk mert a default hogy onnan probaljuk
       // kezdeni ahol abbahagyta a user
+      // de a biztonsag kedveert leelenorizzuk ezt
+      if (video.time != this.watched) {
+        this.log("Have to seek! video time was", video.time, this.watched);
+        this.vsq.seek(from);
+      }
       this.vsq.resume();
     } else {
       this.vsq.seek(0);
@@ -185,11 +190,14 @@ export default class Timeline extends BasePlugin {
         });
     });
 
-    this.handleResume()
+    this.flow.on("ready.vsq-tl", (e: Event, api: Flowplayer, video: FlowVideo) => {
+      this.handleResume(video);
+    });
   }
 
   public destroy(): void {
     this.flowroot.off(".vsq-tl .vsq-tl-tlt");
+    this.flow.off(".vsq-tl");
     this.slider.disable(false);
   }
 }

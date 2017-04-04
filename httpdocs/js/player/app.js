@@ -1560,7 +1560,7 @@ System.register("player/VSQ/Timeline", ["player/VSQ/BasePlugin", "player/VSQ/Mod
                         this.log("out of bounds: ", percentage);
                     }
                 };
-                Timeline.prototype.handleResume = function () {
+                Timeline.prototype.handleResume = function (video) {
                     return __awaiter(this, void 0, void 0, function () {
                         var from, question, shouldResume;
                         return __generator(this, function (_a) {
@@ -1575,6 +1575,10 @@ System.register("player/VSQ/Timeline", ["player/VSQ/BasePlugin", "player/VSQ/Mod
                                 case 1:
                                     shouldResume = _a.sent();
                                     if (shouldResume) {
+                                        if (video.time != this.watched) {
+                                            this.log("Have to seek! video time was", video.time, this.watched);
+                                            this.vsq.seek(from);
+                                        }
                                         this.vsq.resume();
                                     }
                                     else {
@@ -1639,10 +1643,13 @@ System.register("player/VSQ/Timeline", ["player/VSQ/BasePlugin", "player/VSQ/Mod
                                 right: "auto"
                             });
                     });
-                    this.handleResume();
+                    this.flow.on("ready.vsq-tl", function (e, api, video) {
+                        _this.handleResume(video);
+                    });
                 };
                 Timeline.prototype.destroy = function () {
                     this.flowroot.off(".vsq-tl .vsq-tl-tlt");
+                    this.flow.off(".vsq-tl");
                     this.slider.disable(false);
                 };
                 return Timeline;
