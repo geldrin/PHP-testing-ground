@@ -18,7 +18,7 @@ $b = Appul::getInstance()->set("Howdy, partner!")->greet(); // PHP 5.6+ (needs a
 ($b = new Appul())->set("Howdy, partner!")->greet();        // PHP 7.0+
 
 // hard mode #2
-// FATAL ERROR (Cannot use temporary expression in write context) at least one setter method needed.w
+// FATAL ERROR (Cannot use temporary expression in write context) at least one setter method needed.
 //($c = new Appul())->$boop = "Bye!";
 //$c->greet();
 
@@ -31,7 +31,7 @@ var_dump($a,$b,$c);
 class Appul {
     public $boop = "";
     
-    static function getInstance() { return new Appul(); } // for PHP 5.6<=
+    static function getInstance() { return new Appul(); } // extra class needed for PHP 5.6 above
     function set($s) { $this->boop = $s; return $this; }
     function greet() { print_r("{$this->boop}\n"); return $this; } // return can be omitted in PHP 7.0+
 }
