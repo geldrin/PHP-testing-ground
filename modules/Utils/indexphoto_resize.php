@@ -11,8 +11,11 @@ define('PRODUCTION', false );
 define('DEBUG', false );
 
 include_once(BASE_PATH . 'libraries/Springboard/Application/Cli.php');
+include_once(BASE_PATH . 'libraries/Videosquare/Modules/RunExt.php');
 include_once(BASE_PATH . 'modules/Jobs/job_utils_media2.php');
 include_once(BASE_PATH . 'modules/Jobs/job_utils_base.php');
+
+use Videosquare\Job\RunExt as RunExt;
 
 // ------------------------------------------------------------------------------------------------
 
@@ -26,7 +29,9 @@ class Main {
   private static $debug         = false;
   private static $dochannels    = false;
   private static $doVOD         = false;
+  private static $doOCR         = false;
   private static $dolivefeeds   = false;
+  private static $forceOverride = false;
   private static $isdryrun      = false;
   private static $isverbose     = false;
   private static $isinteractive = false;
@@ -41,14 +46,18 @@ class Main {
    * @return int
    */
   public static function Main($argv, $argc) {
+    self::init();
+    self::$sizes = array((new Size(800, 600)), (new Size(1280, 720)));
+    var_dump(self::getWorkDirectories('OCR')); die();
     
     if (self::parseOptions($argc, $argv) == false) { return(1); }
     
-    self::log(sprintf("Indexphoto resize tool started with the following arguments:\n- process VOD = %s\n- process LIVE = %s\n- is dry-run = %s\n- is verbose = %s\n",
-      self::$doVOD ? 'true' : 'false',
-      self::$dolivefeeds ? 'true' : 'false',
-      self::$isdryrun ? 'true' : 'false',
-      self::$isverbose ? 'true' : 'false'));
+    self::log(sprintf("Indexphoto resize tool started with the following arguments:\n- process VOD = %s\n- process LIVE = %s\n- process OCR = %s\n- is dry-run = %s\n- is verbose = %s\n",
+      var_export(self::$doVOD, 1),
+      var_export(self::$dolivefeeds, 1),
+      var_export(self::$doOCR, 1),
+      var_export(self::$isdryrun, 1),
+      var_export(self::$isverbose, 1)));
     
     self::doProcess();
   }
@@ -59,13 +68,11 @@ class Main {
    * @return int Return value, serves as an exitcode (0 if no problems occured).
    */
   private static function doProcess() {
-    $vod_dirs   = [];
-    $recordings = [];
-    
+    $vod_dirs  = [];
     $live_dirs = [];
-    $livefeeds = [];
+    $ocr_dirs  = [];
     
-    $numvoderr = $numliveerr = 0;
+    $numvoderr = $numliveerr = $numocrerr = 0;
     
     // on demand videos //
     if (self::$doVOD) {
@@ -82,6 +89,21 @@ class Main {
       }
     }
     
+    // OCR frames //
+    if (self::$doOCR) {
+      $ocr_dirs = self::getWorkDirectories('OCR');
+      
+      foreach ($ocr_dirs as $ocr) {
+        // do vod resize
+        
+        self::prepareDirectories(array_column($ocr['dest'], 'path'));
+        foreach ($ocr['files'] as $indexphoto) {
+          if (self::$isverbose) { print_r("Resizing: \"{$indexphoto}\"\n"); }
+          if (self::doResize($indexphoto, $ocr['dest']) === false) { $numocrerr++; }
+        }
+      }
+    }
+    
     if (self::$dochannels) {
     }
     
@@ -93,9 +115,7 @@ class Main {
         // do live snapshot resize
         
         self::prepareDirectories(array_column($live['dest'], 'path'));
-        //var_dump($live);
         foreach ($live['files'] as $indexphoto) {
-          //var_dump($indexphoto);
           if (self::$isverbose) { print_r("Resizing: \"{$indexphoto}\"\n"); }
           if (self::doResize($indexphoto, $live['dest']) === false) { $numliveerr++; }
         }
@@ -122,14 +142,24 @@ class Main {
       return false;
     }
     
-    if ($type === 'VOD') {
-      $pattern['storagepath'] = "%srecordings/";
-      $pattern['masterpath' ] = "%s/indexpics/";
-      $pattern['destpath'   ] = "%s/indexpics/%s/";
-    } elseif ($type === 'LIVE') {
-      $pattern['storagepath'] = "%slivestreams/";
-      $pattern['masterpath' ] = "%s";
-      $pattern['destpath'   ] = "%s/%s/";
+    switch ($type) {
+      case "VOD":
+        $pattern['storagepath'] = "%srecordings/";
+        $pattern['masterpath' ] = "%s/indexpics/";
+        $pattern['destpath'   ] = "%s/indexpics/%s/";
+        break;
+      
+      case "LIVE":
+        $pattern['storagepath'] = "%slivestreams/";
+        $pattern['masterpath' ] = "%s";
+        $pattern['destpath'   ] = "%s/%s/";
+        break;
+      
+      case "OCR":
+        $pattern['storagepath'] = "%srecordings/";
+        $pattern['masterpath' ] = "%s/ocr/";
+        $pattern['destpath'   ] = "%s/ocr/%s/";
+        break;
     }
 
     // Lambda function _fill() - returns directory struct array with masterpath, file list, etc.
@@ -146,13 +176,17 @@ class Main {
         
         $directory_struct['main'  ] = $current->getBasename();
         $directory_struct['master'] = sprintf($pattern['masterpath'], $current->getPathname());
+        
+        if (!file_exists($directory_struct['master'])) { return false; }
+        
         $subdir_iterator = new FilesystemIterator($directory_struct['master'], FilesystemIterator::SKIP_DOTS);
         $subdir_iterator->rewind();
+        
         if (iterator_count($subdir_iterator) == 0) {
           if (self::$isverbose) self::log("[WARN] Directory empty: {$current->getPathname()}.");
           return false;
         }
-
+        
         $tmp = [];
         foreach ($subdir_iterator as $f) {
           //if ($f->isDir() && !is_dir_empty($f->getPathname())) {
@@ -190,7 +224,7 @@ class Main {
     
     while ($rdi->valid()) {
       $current = $rdi->current();
-      if ($type === 'VOD') {
+      if ($type === 'VOD' || $type === 'OCR') {
         // If we're working with VOD, we need to parse directories one level deeper
         if ($current->isDir()) {
           $sub_subdir_iterator = new FilesystemIterator($current->getPathname(), FilesystemIterator::SKIP_DOTS);
@@ -253,6 +287,11 @@ class Main {
       $dim    = $resize_data[$i]['size'];
       $size   = "{$dim->w}x{$dim->h}";
       $output = $resize_data[$i]['path'] . $filename;
+      
+      if (self::$forceOverride === false && file_exists($output)) {
+        continue;
+      }
+      
       $cmdparts[] = "\( +clone -background black -resize {$size}^ -gravity center -extent {$size} -write \"{$output}\" +delete \)";
     }
     
@@ -265,7 +304,7 @@ class Main {
       return true;
     }
     
-    $runExt = new runExt();
+    $runExt = new RunExt();
     if ($runExt->run($cmdresize) === false) {
       // error
       $msg = "ERROR: command failed! (". $runExt->command .") ". $runExt->getMessage() ."\nOutput: ". $runExt->getOutput();
@@ -335,9 +374,9 @@ class Main {
    */
   private static function getRecordings() {
     $recordings = null;
-    $sql = "SELECT id, title, subtitle, status FROM recordings AS r WHERE (".
-      "r.status LIKE '". self::$jconf['dbstatus_copystorage_ok'] ."' OR ".
-      "r.status NOT LIKE '". self::$jconf['dbstatus_markedfordeletion'] ."')";
+    $sql = "SELECT id, title, subtitle, status FROM recordings AS r WHERE ("
+      . "r.status LIKE '". self::$jconf['dbstatus_copystorage_ok'] ."' OR "
+      . "r.status NOT LIKE '". self::$jconf['dbstatus_markedfordeletion'] ."')";
     
     try {
       $recordings = self::$db->Execute($sql);
@@ -355,9 +394,9 @@ class Main {
   
   private static function getLivefeeds() {
     $livefeeds = null;
-    $sql = "SELECT id, channelid, name, indexphotofilename, recordinglinkid WHERE (".
-      "status NOT LIKE '". self::$jconf['dbstatus_markedfordeletion'] ."' OR ".
-      "status NOT LIKE '". self::$jconf['dbstatus_deleted'] ."')";
+    $sql = "SELECT id, channelid, name, indexphotofilename, recordinglinkid WHERE ("
+      . "status NOT LIKE '". self::$jconf['dbstatus_markedfordeletion'] ."' OR "
+      . "status NOT LIKE '". self::$jconf['dbstatus_deleted'] ."')";
     
     try {
       $livefeeds = self::$db->Execute($sql);
@@ -488,6 +527,11 @@ class Main {
           self::$isinteractive = true;
           break;
         
+        case 'f':
+        case 'force':
+          self::$forceOverride = true;
+          break;
+        
         case 'dry':
         case 'dryrun':
           self::$isdryrun = true; // don't actually create folders and new files
@@ -503,6 +547,11 @@ class Main {
       
         case 'vod':
           self::$doVOD = true; // update recordings table? ('indexphotofilename')
+          break;
+        
+        case 'o':
+        case 'ocr':
+          self::$doOCR = true;
           break;
         
         case 'size': // size for new indexphotos (can be used multiple times)
