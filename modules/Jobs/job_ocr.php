@@ -969,7 +969,7 @@ function createOCRsnapshots($recordingid, $images, $snapshotparams, $source) {
   
   foreach($images['processed'] as $frameid) {
     $img2resize = $images['frames'][$frameid];
-    $cmdresize = $onice ." convert \"". $source . $img2resize['file'] ."\"";
+    $cmdresize = '';
     
 		$cmdparts = array();
 		$cmdparts[] = "{$onice} convert \"{$source}{$img2resize['file']}\"";
@@ -977,7 +977,7 @@ function createOCRsnapshots($recordingid, $images, $snapshotparams, $source) {
 		for ( $i = 0; $i < count($snapshotparams['resize']); $i++ ) {
 			$size   = $snapshotparams['resize' ][$i];
 			$folder = $snapshotparams['folders'][$i];
-			$output = $folder . $rid ."_". $img2resize['dbid'] .".jpg";
+      $output = "{$folder}{$rid}_{$img2resize['dbid']}.jpg";
 			$cmdparts[] = "\( +clone -background black -resize {$size}^ -gravity center -extent {$size} -write \"{$output}\" +delete \)";
 		}
 		
