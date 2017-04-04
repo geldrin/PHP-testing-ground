@@ -14,7 +14,7 @@ include_once('job_utils_log.php');
 include_once('job_utils_status.php');
 include_once('job_utils_media2.php');
 
-use Videosquare\Job\RunExt as RunExt;
+use Videosquare\Job\RunExt as runExt;
 
 set_time_limit(0);
 
