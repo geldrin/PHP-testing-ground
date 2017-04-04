@@ -47,8 +47,6 @@ class Main {
    */
   public static function Main($argv, $argc) {
     self::init();
-    self::$sizes = array((new Size(800, 600)), (new Size(1280, 720)));
-    var_dump(self::getWorkDirectories('OCR')); die();
     
     if (self::parseOptions($argc, $argv) == false) { return(1); }
     
