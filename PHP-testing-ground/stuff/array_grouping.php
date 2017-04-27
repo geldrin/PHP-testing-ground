@@ -58,7 +58,7 @@ function groupBy($array, $by) {
     function ($val, $key, $by) use (&$grouped) {
       if (is_array($val) && array_key_exists($by, $val)) {
         $type = $val[$by];
-        if (!$type) { return; }
+        if ($type !== 0 && !$type) { return; }
         if (isset($grouped[$type])) { $grouped[$type][] = $val; }
         else { $grouped[$type] = [$val]; }
       }
